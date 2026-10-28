@@ -1,0 +1,20 @@
+# Análise estática — Balcão Revenda
+# Lint rígido (very_good_analysis) conforme tech.md.
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "lib/generated/**"
+  errors:
+    # Nomes de domínio em português podem conflitar com regras de inglês.
+    public_member_api_docs: ignore
+    # Falso positivo conhecido do freezed + json_serializable: @JsonKey em
+    # parâmetros do construtor factory é repassado ao campo gerado.
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    # Interface em pt_BR usa muitos literais de texto.
+    flutter_style_todos: false
