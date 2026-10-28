@@ -122,3 +122,64 @@
 - **Arquivo:** `lib/domain/entidades/retirada.dart`
 - **Responsabilidade:** retirada de um destino do caixa (tabela `retiradas`).
   `valor` é `Decimal`.
+
+---
+
+> Cálculos puros (`lib/domain/calculos/`) — funções e tipos de resultado do
+> design.md §6. Sem dependência de Flutter ou Supabase (apenas `dart:core`,
+> `package:decimal` e as entidades). Arredondamento só na exibição; os
+> resultados guardam `Decimal` em precisão plena. Cobertos pelos vetores do §6
+> em `test/domain/calculos/` (tolerância 0,005).
+
+## documento_CalculoDecimal
+- **Arquivo:** `lib/domain/calculos/decimais.dart`
+- **Responsabilidade:** extensão de [Decimal] com `dividir` (divisão com escala
+  interna ampla, já que `/` devolve `Rational`) e `arred2` (arredondamento de
+  exibição a 2 casas). Expõe também `zero` e `cem` reutilizáveis.
+
+## documento_Taxas
+- **Arquivo:** `lib/domain/calculos/taxas.dart`
+- **Responsabilidade:** faixa/taxa de plataforma e preços-alvo (§6.1/§6.2).
+  `ordenarFaixas`, `faixa`, `taxa`, `precoMinimo` e `precoParaMargem`. Faixas
+  ordenadas por `precoAte` asc (sem limite por último).
+
+## documento_ResultadoKit
+- **Arquivo:** `lib/domain/calculos/produto_venda.dart`
+- **Responsabilidade:** resultado freezed do cálculo de um produto de venda
+  (kit) em uma plataforma (§6.3): `compra`, `investimento`, `clientePaga`,
+  `taxa`, `liquido`, `lucro`, `margem`, `roi`, `metaQtd` (int?), `metaFaturamento`,
+  `atingido`, `roasAlvo` (Decimal?), `custoAnuncio`, `vendidos` (int),
+  `abelinhasKit`. Produzido por `calcularKit`. `metaQtd` usa o lucro exibido
+  (2 casas), como na planilha de origem.
+
+## documento_ResultadoPedido
+- **Arquivo:** `lib/domain/calculos/pedido.dart`
+- **Responsabilidade:** resultado freezed do cálculo de um pedido (§6.4):
+  `mercadoria`, `custo`, `taxaEstimada`, `liquidoEstimado`, `liquido`,
+  `taxaEfetiva`, `lucro`, `margem`, `abelinhasPedido`. Produzido por
+  `calcularPedido`. Helpers `precoAutomatico` e `itensTaxaFixaAutomatico` para
+  pedidos novos compostos só por kits.
+
+## documento_Abelinhas
+- **Arquivo:** `lib/domain/calculos/abelinhas.dart`
+- **Responsabilidade:** regra e análises de abelinhas (§6.6/§6.7).
+  `abelinhasRegra`, `acimaDaTabela`, `abelinhasProduto`, `roiProduto`,
+  `analisePorFaixa` → `AnaliseFaixa` (teto, abelinhas, limite inferior,
+  nº de produtos, venda, ROI médio, ROI no limite, abelinha mínima, situação),
+  `analiseGeral` → `AnaliseGeralAbelinhas` (ROI médio geral, com lucro/prejuízo,
+  abelinha mínima sem prejuízo) e `avisoAjusteManual` → `AvisoAjusteManual`
+  (regra/manual, diferença, lucro/ROI antes e depois, mínimo, cor do aviso).
+
+## documento_Caixa
+- **Arquivo:** `lib/domain/calculos/caixa.dart`
+- **Responsabilidade:** caixa e saques (§6.8). `rateio` (lista de `SaqueRateio`),
+  `entradasDestino`, `saidasDestino`, `saldoDestino` → `SaldoDestino`
+  (entradas, saídas, saldo) e `saldoTotal`.
+
+## documento_Painel
+- **Arquivo:** `lib/domain/calculos/painel.dart`
+- **Responsabilidade:** KPIs e pontos de atenção do painel (§6.5/§6.9).
+  `kpisPainel` → `KpisPainel` (faturamento, taxas, líquido, custo, lucro,
+  margem) sobre pedidos `concluido`; `pontosAtencao` → lista de `PontoAtencao`
+  (soma de destinos != 100%, kit com prejuízo ou margem < 15% por plataforma,
+  códigos repetidos).
