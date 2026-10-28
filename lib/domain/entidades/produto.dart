@@ -5,7 +5,7 @@ import 'package:sales/domain/entidades/conversores.dart';
 part 'produto.freezed.dart';
 part 'produto.g.dart';
 
-/// Produto comprado para revenda — tabela `produtos`.
+/// Produto comprado para revenda — tabela `produto_online`.
 ///
 /// `abelinhasManual` nulo significa calcular pela regra de faixas.
 @freezed

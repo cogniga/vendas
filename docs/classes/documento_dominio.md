@@ -34,7 +34,7 @@
 
 ## documento_Produto
 - **Arquivo:** `lib/domain/entidades/produto.dart`
-- **Responsabilidade:** produto comprado para revenda (tabela `produtos`).
+- **Responsabilidade:** produto comprado para revenda (tabela `produto_online`).
   `custo` é `Decimal`; `abelinhasManual` (`Decimal?`) nulo significa calcular
   pela regra de faixas.
 

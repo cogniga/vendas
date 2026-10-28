@@ -1,0 +1,7 @@
+{
+  "task_id": "balcao-revenda-dominio",
+  "task_description": "Implementar a camada de domínio do Balcão Revenda: entidades freezed (lib/domain/entidades/) espelhando o schema Supabase e o design.md §2/§3, cálculos puros (lib/domain/calculos/) conforme design.md §6, e testes de unidade cobrindo todos os vetores numéricos do §6 (tolerância 0,005). Trabalho direto no repositório, sem worktree.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}
