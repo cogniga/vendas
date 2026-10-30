@@ -1,0 +1,82 @@
+import 'package:flutter/material.dart';
+import 'package:sales/core/theme/tokens.dart';
+
+/// Cartão de indicador (KPI): rótulo, valor em destaque e subtexto opcional.
+class KpiCard extends StatelessWidget {
+  const KpiCard({
+    required this.label,
+    required this.value,
+    this.sub,
+    super.key,
+  });
+
+  final String label;
+  final String value;
+  final String? sub;
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.cores;
+    final textos = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(Espacos.g16),
+      decoration: BoxDecoration(
+        color: cores.surface,
+        borderRadius: BorderRadius.circular(Raios.cartao),
+        border: Border.all(color: cores.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: textos.labelLarge),
+          const SizedBox(height: Espacos.g8),
+          Text(value, style: textos.titleLarge),
+          if (sub != null) ...[
+            const SizedBox(height: Espacos.base),
+            Text(
+              sub!,
+              style: textos.bodySmall?.copyWith(color: cores.muted),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Linha de KPIs: [Wrap] de cartões com largura-alvo ~170 px que ocupam o
+/// espaço disponível (flex 1 1 170px do protótipo).
+class KpiRow extends StatelessWidget {
+  const KpiRow({required this.cartoes, this.larguraMinima = 170, super.key});
+
+  final List<KpiCard> cartoes;
+  final double larguraMinima;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final total = constraints.maxWidth;
+        const espaco = Espacos.g12;
+        // Quantos cabem respeitando a largura mínima.
+        var colunas = ((total + espaco) / (larguraMinima + espaco)).floor();
+        if (colunas < 1) colunas = 1;
+        if (colunas > cartoes.length) colunas = cartoes.length;
+        final largura = colunas <= 0
+            ? total
+            : (total - espaco * (colunas - 1)) / colunas;
+
+        return Wrap(
+          spacing: espaco,
+          runSpacing: espaco,
+          children: [
+            for (final c in cartoes)
+              SizedBox(width: largura, child: c),
+          ],
+        );
+      },
+    );
+  }
+}
