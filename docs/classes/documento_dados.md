@@ -60,10 +60,13 @@
   Future<Map<Plataforma, List<FaixaTaxa>>>` (plataformas order `ordem`; faixas
   por plataforma, sem limite por último); `criar(String empresaId, String nome)
   → Future<Plataforma>`; `renomear(String id, String nome) → Future<void>`;
-  `mudarCor(String id, String cor) → Future<void>`; `excluir(String id) →
-  Future<void>` (bloqueia com `ErroRepositorio` se referenciada por pedidos ou
-  saques — checa `count` antes); `substituirFaixas(String plataformaId, String
-  empresaId, List<FaixaTaxa>) → Future<void>` (delete + insert em lote).
+  `mudarCor(String id, String cor) → Future<void>`;
+  `atualizarAparencia(String id, String cor, String obs) → Future<void>`
+  (usado pelo `ImportadorSeed` ao casar plataformas pelo nome); `excluir(String
+  id) → Future<void>` (bloqueia com `ErroRepositorio` se referenciada por
+  pedidos ou saques — checa `count` antes); `substituirFaixas(String
+  plataformaId, String empresaId, List<FaixaTaxa>) → Future<void>` (delete +
+  insert em lote).
 - **Provider:** `plataformaRepositoryProvider`.
 
 ## documento_DestinoRepository

@@ -58,6 +58,14 @@ class PlataformaRepository {
     await _client.from('plataformas').update({'cor': cor}).eq('id', id);
   }
 
+  /// Atualiza a aparência (cor e observação) da plataforma [id].
+  Future<void> atualizarAparencia(String id, String cor, String obs) async {
+    await _client
+        .from('plataformas')
+        .update({'cor': cor, 'obs': obs})
+        .eq('id', id);
+  }
+
   /// Exclui a plataforma [id].
   ///
   /// Bloqueia com [ErroRepositorio] se houver pedidos ou saques que a
