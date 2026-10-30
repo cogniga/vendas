@@ -17,7 +17,6 @@ dependencies:
   flutter_riverpod: ^2.6.1
   freezed_annotation: ^2.4.4
   go_router: ^14.6.2
-  google_fonts: ^6.2.1
   intl: ^0.20.2
   json_annotation: ^4.9.0
   lucide_icons_flutter: ^3.0.0
@@ -42,3 +41,16 @@ flutter:
   assets:
     - assets/seed/dados-iniciais.json
     - assets/seed/produtos.csv
+    - env/supabase.json
+
+  fonts:
+    - family: Plus Jakarta Sans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/PlusJakartaSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
+          weight: 700

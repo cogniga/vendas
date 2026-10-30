@@ -1,0 +1,7 @@
+{
+  "task_id": "task-balcao-revenda-tres-camadas",
+  "task_description": "Implementar tres camadas no app Flutter 'Balcao Revenda' (repo direto em branch main, sem worktree, sem push): PARTE A repositorios Supabase + providers Riverpod + empresaAtualProvider; PARTE B navegacao go_router + AppShell + componentes compartilhados + widget tests; PARTE C auth + onboarding + importador do seed. Ordem obrigatoria A -> B -> C (B usa providers de A; C usa repos de A e o shell de B). Nao redescobrir calculos de dominio (ja existem em lib/domain/calculos) nem formatacao (lib/core/format) — usar os existentes.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
