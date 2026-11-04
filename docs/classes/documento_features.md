@@ -90,6 +90,67 @@
   - `codigosRepetidosProvider` (`FutureProvider<Set<String>>`): códigos que
     aparecem em mais de um produto da lista atual (sinaliza "código repetido").
 
+## documento_ComposicaoProviders
+- **Arquivo:** `lib/features/composicao/application/composicao_providers.dart`
+- **Responsabilidade:** providers (todos `autoDispose`) da Composição de custo
+  (R4). Lêem `empresaAtualProvider` e devolvem vazio/`null` sem empresa
+  (login provisório adm/adm).
+  - `kitsProvider` (`List<ProdutoVenda>`): kits com itens e preços montados.
+  - `plataformasComFaixasProvider` (`Map<Plataforma,List<FaixaTaxa>>`).
+  - `produtosProvider` (`List<Produto>`), `faixasAbelinhaProvider`
+    (`List<FaixaAbelinha>`), `configuracoesProvider` (`Configuracoes?`),
+    `comprasInsumoProvider` (`List<CompraInsumo>`), `pedidosProvider`
+    (`List<Pedido>`, para "vendidos").
+  - `kitCompletoProvider` (`family<ProdutoVenda?, String>`): kit completo por
+    id, via `obterCompleto`, para abrir no editor.
+  - `dadosEdicaoKitProvider` (`FutureProvider<DadosEdicaoKit>`): compõe os
+    anteriores num único objeto para o editor.
+- **DadosEdicaoKit:** agregador com `plataformas`, `produtosPorId`,
+  `faixasAbelinha`, `configuracoes`, `compras`, `pedidos`; getter `produtos`
+  devolve os produtos ordenados por nome.
+
+## documento_KitFormController
+- **Arquivo:** `lib/features/composicao/application/kit_form_controller.dart`
+- **Responsabilidade:** mutações de `ProdutoVenda` (R4).
+  `StateNotifier<AsyncValue<void>>` com `salvar(ProdutoVenda)`,
+  `duplicar(id)` e `excluir(id)` via `produtoVendaRepositoryProvider`; em
+  sucesso invalida `kitsProvider` e traduz `ErroRepositorio` para pt_BR.
+- **Provider:** `kitFormControllerProvider`
+  (`StateNotifierProvider<KitFormController, AsyncValue<void>>`).
+
+## documento_ComposicaoPage
+- **Arquivo:** `lib/features/composicao/presentation/composicao_page.dart`
+- **Responsabilidade:** tela da Composição de custo (R4, substitui o
+  placeholder). Raiz `Column`. `PageHeader` + "Novo produto de venda"; trata
+  carregando/erro/vazio. `ResponsiveList<ProdutoVenda>` com
+  `limiarCartao: 990`. Colunas: **Produto de venda** (principal: nome +
+  composição `qtd× código`), **Investimento** (compra+embalagem+impressão+
+  outros, com `N itens · X 🐝`) e **uma coluna por plataforma** com o lucro
+  (`good`/`bad`) e, abaixo, `cliente paga · margem` via `calcularKit`. Ações:
+  abrir (`abrirKitEditor`), duplicar e `ConfirmDeleteButton`. Em tela estreita
+  vira cartões (sem rolagem horizontal).
+
+## documento_KitEditor
+- **Arquivo:** `lib/features/composicao/presentation/kit_editor.dart`
+- **Responsabilidade:** editor de produto de venda em painel lateral largo
+  (`abrirKitEditor` → `abrirPainelLateral(largo: true)`, até 1080px; tela cheia
+  < 760). `ConsumerStatefulWidget` que observa `dadosEdicaoKitProvider` e
+  (ao editar) `kitCompletoProvider`. Layout: em ≥860px `Row` [esquerda flex3,
+  resumo flex2]; estreito empilha. Coluna esquerda: itens (busca + −/+, 0
+  remove), custos adicionais (embalagem por `CompraInsumo` unitário =
+  `valorTotal/itens` ou manual, impressão, outros) e preço base/metas
+  (margem %, meta de lucro R$, fatia do lucro p/ anúncios). Resumo fixo:
+  investimento, abelinhas + valor em R$, lucro por plataforma e "Melhor
+  resultado" (quando investimento > 0). Tabela **Resultado por plataforma**:
+  campos editáveis preço/desconto/cupom (vazio usa a base como placeholder),
+  recalcula ao digitar mantendo o foco (controller por célula), colunas
+  calculadas por `calcularKit` + `precoMinimo`; "Sugerido" é um botão
+  (`precoParaMargem + desconto + cupom`) que aplica o valor no campo de preço;
+  "Meta" como pill `vendidos/metaQtd`. Em tela estreita a tabela vira blocos
+  por plataforma. Ao salvar valida nome e ≥1 item, normaliza o nome com
+  `PadraoEscrita.titulo`, limpa overrides vazios, preenche `empresaId` e chama
+  `kitFormControllerProvider`.
+
 ## documento_ProdutosPage
 - **Arquivo:** `lib/features/produtos/presentation/produtos_page.dart`
 - **Responsabilidade:** tela de Produtos (R3). Raiz `Column` (o `AppShell`
