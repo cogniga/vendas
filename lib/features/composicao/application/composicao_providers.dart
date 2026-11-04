@@ -9,6 +9,7 @@ import 'package:sales/data/repositorios/produto_repository.dart';
 import 'package:sales/data/repositorios/produto_venda_repository.dart';
 import 'package:sales/domain/entidades/compra_insumo.dart';
 import 'package:sales/domain/entidades/configuracoes.dart';
+import 'package:sales/domain/entidades/enums.dart';
 import 'package:sales/domain/entidades/faixa_abelinha.dart';
 import 'package:sales/domain/entidades/faixa_taxa.dart';
 import 'package:sales/domain/entidades/pedido.dart';
@@ -64,11 +65,25 @@ final comprasInsumoProvider =
   return ref.watch(compraInsumoRepositoryProvider).listar(empresa.id);
 });
 
-/// Pedidos da empresa ativa (usados para contar unidades vendidas).
+/// Pedidos concluídos da empresa ativa, com itens, para contar unidades
+/// vendidas por kit.
+///
+/// [PedidoRepository.listar] não traz os itens; como a contagem de vendidos
+/// depende de `pedido.itens`, carregamos cada pedido concluído com
+/// [PedidoRepository.obterComItens] (mesmo padrão de
+/// `vendidosPorProdutoProvider` em Produtos).
 final pedidosProvider = FutureProvider.autoDispose<List<Pedido>>((ref) async {
   final empresa = await ref.watch(empresaAtualProvider.future);
   if (empresa == null) return [];
-  return ref.watch(pedidoRepositoryProvider).listar(empresa.id);
+  final repo = ref.watch(pedidoRepositoryProvider);
+  final resumos = await repo.listar(empresa.id);
+  final comItens = <Pedido>[];
+  for (final resumo in resumos) {
+    if (resumo.situacao != SituacaoPedido.concluido) continue;
+    final pedido = await repo.obterComItens(resumo.id);
+    if (pedido != null) comItens.add(pedido);
+  }
+  return comItens;
 });
 
 /// Kit completo (itens + preços por plataforma) para edição, por `id`.

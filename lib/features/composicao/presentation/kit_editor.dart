@@ -773,7 +773,7 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
     final r = _resultado(dados, kit, p, faixas);
     final investimento = r.investimento;
     final minimo = precoMinimo(faixas, investimento);
-    final sugerido = _sugerido(faixas, investimento);
+    final sugerido = _sugerido(p.id, faixas, investimento);
     final negativo = r.lucro < Decimal.zero;
 
     Widget val(String t, {Color? cor, bool forte = false}) => Expanded(
@@ -842,7 +842,7 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
     final textos = Theme.of(context).textTheme;
     final r = _resultado(dados, kit, p, faixas);
     final minimo = precoMinimo(faixas, r.investimento);
-    final sugerido = _sugerido(faixas, r.investimento);
+    final sugerido = _sugerido(p.id, faixas, r.investimento);
     final negativo = r.lucro < Decimal.zero;
 
     Widget par(String rotulo, Widget valor) => Row(
@@ -1056,10 +1056,18 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
     _onPrecoCelula(platId, 'preco', texto);
   }
 
-  Decimal? _sugerido(List<FaixaTaxa> faixas, Decimal investimento) {
+  Decimal? _sugerido(
+    String platId,
+    List<FaixaTaxa> faixas,
+    Decimal investimento,
+  ) {
     if (_margemAlvo >= Decimal.fromInt(100)) return null;
     final base = precoParaMargem(faixas, investimento, _margemAlvo);
-    return base + _desconto + _cupom;
+    // Usa o desconto/cupom efetivo (override da plataforma, senão base),
+    // como o protótipo (kitCalc) e design §6.3.
+    final desconto = _precos[platId]?.desconto ?? _desconto;
+    final cupom = _precos[platId]?.cupom ?? _cupom;
+    return base + desconto + cupom;
   }
 
   Decimal _compra(DadosEdicaoKit dados) {
