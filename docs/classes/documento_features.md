@@ -69,3 +69,39 @@
   O rateio do saque usa os percentuais do arquivo (`valor * percentual / 100`).
 - **Provider:** `importadorSeedProvider` (monta o importador a partir dos
   providers de repositório). `kCaminhoSeed` expõe o caminho do asset.
+
+## documento_ProdutosProviders
+- **Arquivo:** `lib/features/produtos/application/produtos_providers.dart`
+- **Responsabilidade:** providers (todos `autoDispose`) que alimentam a lista
+  de Produtos (R3). Lêem `empresaAtualProvider` e devolvem vazio/`null`
+  enquanto não há empresa (login provisório adm/adm).
+  - `produtosProvider` (`FutureProvider<List<Produto>>`): lista de
+    `produto_online` ordenada por nome.
+  - `faixasAbelinhaProvider` (`FutureProvider<List<FaixaAbelinha>>`): faixas da
+    regra de abelinhas, ordenadas por custo.
+  - `configuracoesProvider` (`FutureProvider<Configuracoes?>`): traz
+    `valorAbelinha`.
+  - `vendidosPorProdutoProvider` (`FutureProvider<Map<String,int>>`): unidades
+    vendidas por produto, somando só pedidos `SituacaoPedido.concluido`. Itens
+    avulsos somam a quantidade; itens de kit somam a quantidade do
+    `ProdutoVendaItem` × a quantidade do kit no pedido. Carrega os itens via
+    `PedidoRepository.obterComItens` por pedido e os kits via
+    `ProdutoVendaRepository.listar`.
+  - `codigosRepetidosProvider` (`FutureProvider<Set<String>>`): códigos que
+    aparecem em mais de um produto da lista atual (sinaliza "código repetido").
+
+## documento_ProdutosPage
+- **Arquivo:** `lib/features/produtos/presentation/produtos_page.dart`
+- **Responsabilidade:** tela de Produtos (R3). Raiz `Column` (o `AppShell`
+  envolve em scroll). `PageHeader` + "Novo produto", busca por código/nome/
+  marca/fornecedor, filtro por categoria e contador. Lista via
+  `ResponsiveList<Produto>` (tabela ↔ cartões). Colunas: **Produto**
+  (principal: nome + `CodeChip`/marca/categoria e pills `inativo` quando
+  `!ativo` e `código repetido` quando o código está em `codigosRepetidosProvider`),
+  **Custo un.** (valor + fornecedor), **Abelinhas** (quantidade + pill
+  "pela regra/ajustado" + botão ✎ `IconAction` que abre o editor) e
+  **Estoque** (`N unidade` + `N vendido(s)` de `vendidosPorProdutoProvider`).
+  Ações por linha: editar (✎) e `ConfirmDeleteButton` (R3.9 avisa kits que
+  usam o produto antes de excluir). O editor é aberto por `abrirProdutoForm`
+  (painel lateral). Widgets internos: `_Filtros`, `_CelulaProduto`,
+  `_CelulaCusto`, `_CelulaAbelinhas`, `_CelulaEstoque`.
