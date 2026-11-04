@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sales/core/config/sessao_local.dart';
 import 'package:sales/core/theme/tokens.dart';
 import 'package:sales/features/auth/application/auth_controller.dart';
 
@@ -121,6 +122,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           color: cores.muted,
                         ),
                       ),
+                      if (!_criandoConta) ...[
+                        const SizedBox(height: Espacos.g8),
+                        Text(
+                          'Acesso provisório: adm / adm',
+                          style: textos.bodySmall?.copyWith(
+                            color: cores.muted,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: Espacos.g20),
                       TextFormField(
                         controller: _email,
@@ -200,6 +210,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? _validarEmail(String? valor) {
     final texto = valor?.trim() ?? '';
     if (texto.isEmpty) return 'Informe o e-mail';
+    // Atalho de desenvolvimento: aceita o usuário local "adm".
+    if (!_criandoConta && SessaoLocal.valida(texto, _senha.text)) {
+      return null;
+    }
     if (!texto.contains('@') || !texto.contains('.')) {
       return 'E-mail inválido';
     }
@@ -209,6 +223,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? _validarSenha(String? valor) {
     final texto = valor ?? '';
     if (texto.isEmpty) return 'Informe a senha';
+    // Atalho de desenvolvimento: não exige 6 caracteres para o usuário local.
+    if (!_criandoConta && SessaoLocal.valida(_email.text, texto)) {
+      return null;
+    }
     if (_criandoConta && texto.length < 6) {
       return 'A senha precisa de pelo menos 6 caracteres';
     }

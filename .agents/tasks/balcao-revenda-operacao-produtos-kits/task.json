@@ -1,0 +1,7 @@
+{
+  "task_id": "balcao-revenda-operacao-produtos-kits",
+  "task_description": "Implementar fielmente ao protótipo as telas do grupo Operação: PRODUTOS (R3) — completar a lista já existente conforme R3.8/V.produtos — e COMPOSIÇÃO DE CUSTO / kits (R4) — construir do zero (lista com uma coluna por plataforma + editor em painel lateral largo com resumo fixo e tabela 'Resultado por plataforma'). App Flutter 'sales'. Pedidos (R5) é referência e não deve mudar. Domínio/cálculos já testados — não alterar.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}

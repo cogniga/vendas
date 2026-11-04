@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sales/core/config/sessao_local.dart';
 import 'package:sales/core/config/supabase_config.dart';
 import 'package:sales/core/router/rotas.dart';
 import 'package:sales/core/widgets/app_shell.dart';
@@ -27,6 +28,7 @@ class _RefreshRoteador extends ChangeNotifier {
   _RefreshRoteador(Ref ref) {
     ref
       ..listen(authStateProvider, (_, _) => notifyListeners())
+      ..listen(sessaoLocalProvider, (_, _) => notifyListeners())
       ..listen(empresaAtualProvider, (_, _) => notifyListeners());
   }
 }
@@ -40,30 +42,56 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: Rotas.painel,
     refreshListenable: refresh,
     redirect: (context, state) {
-      final temSessao =
-          Supabase.instance.client.auth.currentSession != null;
       final indoParaLogin = state.matchedLocation == Rotas.login;
       final indoParaOnboarding =
           state.matchedLocation == Rotas.onboarding;
+
+      // Atalho de desenvolvimento (adm/adm): libera o app sem Supabase.
+      // Como não há empresa real, vai direto ao painel (pula onboarding).
+      final sessaoLocal = ref.read(sessaoLocalProvider);
+      if (sessaoLocal) {
+        return (indoParaLogin || indoParaOnboarding) ? Rotas.painel : null;
+      }
+
+      final sessao = Supabase.instance.client.auth.currentSession;
+      final temSessao = sessao != null;
 
       // Sem sessão: só o login é permitido.
       if (!temSessao) {
         return indoParaLogin ? null : Rotas.login;
       }
 
-      // Com sessão mas em /login: sai para o painel.
-      if (indoParaLogin) return Rotas.painel;
+      // Sessão anônima: entra direto no app. A empresa é criada
+      // automaticamente por empresaAtualProvider, então não há onboarding.
+      final anonimo = sessao.user.isAnonymous;
+      if (anonimo) {
+        return (indoParaLogin || indoParaOnboarding) ? Rotas.painel : null;
+      }
 
-      // Com sessão: decide pelo estado (cacheado) da empresa atual.
+      // Com sessão mas em /login: decide pelo estado da empresa abaixo.
       final empresa = ref.read(empresaAtualProvider);
-      // Enquanto carrega ou em erro, não redireciona (evita loop/flicker).
-      final semEmpresa = empresa.valueOrNull == null && empresa.hasValue;
-      if (semEmpresa) {
+
+      // Enquanto a empresa ainda carrega, segura na tela atual se já for
+      // login/onboarding; caso contrário, mantém no login até resolver, para
+      // não montar o painel/shell com dados incompletos (causa de erro).
+      if (empresa.isLoading) {
+        return (indoParaLogin || indoParaOnboarding) ? null : Rotas.login;
+      }
+
+      // Falha ao buscar a empresa: estado seguro é o onboarding.
+      if (empresa.hasError) {
         return indoParaOnboarding ? null : Rotas.onboarding;
       }
 
-      // Já tem empresa: não deixa parado no onboarding.
-      if (indoParaOnboarding && empresa.valueOrNull != null) {
+      final temEmpresa = empresa.valueOrNull != null;
+
+      // Com sessão e sem empresa: vai para o onboarding.
+      if (!temEmpresa) {
+        return indoParaOnboarding ? null : Rotas.onboarding;
+      }
+
+      // Já tem empresa: não deixa parado no login nem no onboarding.
+      if (indoParaLogin || indoParaOnboarding) {
         return Rotas.painel;
       }
 

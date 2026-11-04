@@ -18,10 +18,23 @@ List<FaixaTaxa> ordenarFaixas(List<FaixaTaxa> faixas) {
   });
 }
 
+/// Faixa neutra (sem taxa) usada quando a plataforma não tem faixas.
+FaixaTaxa _faixaNeutra() => FaixaTaxa(
+      id: '',
+      empresaId: '',
+      plataformaId: '',
+      taxaFixa: zero,
+      taxaPercentual: zero,
+    );
+
 /// Faixa aplicável a [preco]: a primeira cujo limite cobre o preço
 /// (`precoAte == null || preco <= precoAte`); se nenhuma cobrir, a última.
+///
+/// Quando [faixas] está vazia (plataforma sem faixas ou dados ainda não
+/// carregados), devolve uma faixa neutra (taxa zero) em vez de lançar.
 FaixaTaxa faixa(List<FaixaTaxa> faixas, Decimal preco) {
   final ordenadas = ordenarFaixas(faixas);
+  if (ordenadas.isEmpty) return _faixaNeutra();
   for (final f in ordenadas) {
     if (f.precoAte == null || preco <= f.precoAte!) return f;
   }

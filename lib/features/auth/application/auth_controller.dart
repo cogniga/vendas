@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sales/core/config/sessao_local.dart';
 import 'package:sales/core/config/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,17 +10,29 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// quando falha e `data` ao concluir. A navegação em si é decidida pelo
 /// `redirect` do go_router (reage à mudança de sessão).
 class AuthController extends StateNotifier<AsyncValue<void>> {
-  /// Cria o controller com o [SupabaseClient] injetado.
-  AuthController(this._client) : super(const AsyncValue.data(null));
+  /// Cria o controller com o [SupabaseClient] e o controller de sessão local.
+  AuthController(this._client, this._sessaoLocal)
+      : super(const AsyncValue.data(null));
 
   final SupabaseClient _client;
+  final SessaoLocalController _sessaoLocal;
 
-  /// Entra com e-mail e senha (`signInWithPassword`).
-  Future<void> entrar(String email, String senha) =>
-      _executar(() => _client.auth.signInWithPassword(
-            email: email.trim(),
-            password: senha,
-          ));
+  /// Entra com e-mail e senha.
+  ///
+  /// Atalho de desenvolvimento: se as credenciais forem as locais
+  /// (`adm`/`adm`), ativa a sessão local e NÃO chama o Supabase. Caso
+  /// contrário, usa `signInWithPassword` normalmente.
+  Future<void> entrar(String email, String senha) {
+    if (SessaoLocal.valida(email, senha)) {
+      _sessaoLocal.entrar();
+      state = const AsyncValue.data(null);
+      return Future<void>.value();
+    }
+    return _executar(() => _client.auth.signInWithPassword(
+          email: email.trim(),
+          password: senha,
+        ));
+  }
 
   /// Cria uma conta com e-mail e senha (`signUp`).
   Future<void> criarConta(String email, String senha) =>
@@ -33,8 +46,11 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
         () => _client.auth.resetPasswordForEmail(email.trim()),
       );
 
-  /// Encerra a sessão (`signOut`).
-  Future<void> sair() => _executar(() => _client.auth.signOut());
+  /// Encerra a sessão (local e do Supabase).
+  Future<void> sair() {
+    _sessaoLocal.sair();
+    return _executar(() => _client.auth.signOut());
+  }
 
   Future<void> _executar(Future<void> Function() acao) async {
     state = const AsyncValue.loading();
@@ -87,5 +103,8 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
 /// Provider do [AuthController].
 final authControllerProvider =
     StateNotifierProvider<AuthController, AsyncValue<void>>((ref) {
-  return AuthController(ref.watch(supabaseClientProvider));
+  return AuthController(
+    ref.watch(supabaseClientProvider),
+    ref.watch(sessaoLocalProvider.notifier),
+  );
 });

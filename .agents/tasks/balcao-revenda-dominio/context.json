@@ -1,0 +1,27 @@
+{
+  "project_type": "App Flutter multiplataforma (macOS, Windows, Web, Android) chamado Balcao Revenda; package Dart name 'sales', imports 'package:sales/...'. Backend Supabase (Postgres + RLS), mas esta tarefa e SOMENTE a camada de dominio pura + entidades, sem Flutter/Supabase nos calculos.",
+  "language": "Dart 3 (sdk ^3.9.2) / Flutter 3.35.7 estavel",
+  "build_system": "Flutter + build_runner (freezed + json_serializable + riverpod_generator). Codigo gerado em *.freezed.dart e *.g.dart NAO e versionado-manual; regenerar com build_runner.",
+  "test_framework": "flutter_test (+ mocktail disponivel). Testes de dominio em test/domain/.",
+  "build_command": "dart run build_runner build --delete-conflicting-outputs",
+  "test_command": "flutter test",
+  "verification_instructions": "1) dart run build_runner build --delete-conflicting-outputs (gera *.freezed.dart/*.g.dart sem erro). 2) flutter analyze (lint very_good_analysis, linhas <= 80 colunas; deve ficar limpo). 3) flutter test (baseline atual = 13 testes passam em test/core/format/; apos a tarefa, todos os vetores §6 passam com tolerancia 0,005). Nao deixar warnings de analyze.",
+  "snapshot_or_generated_files": "Arquivos gerados pelo build_runner: lib/domain/entidades/*.freezed.dart e lib/domain/entidades/*.g.dart (e quaisquer *.g.dart em calculos se usar json). Produzidos por 'dart run build_runner build --delete-conflicting-outputs'. Ja excluidos do analyze em analysis_options.yaml. Verifique .gitignore antes de commitar arquivos gerados; o .gitignore do projeto deve ser respeitado (nao versionar o que ele ignora).",
+  "environment_constraints": "Flutter em /Users/raquel/Documents/sdk/flutter/bin. Sem necessidade de --dart-define para dominio/testes (nada de Supabase na camada pura). Nao rodar o app; apenas analyze + test + build_runner.",
+  "contribution_requirements": "Regras do projeto (.kiro/steering + regras globais): (a) Dart/Flutter com clean code; (b) dinheiro SEMPRE Decimal (nunca double) no Dart, numeric(12,2) no Postgres; percentuais numeric(6,2) com 20 = 20%; (c) arredondamento so na exibicao, exceto onde o §6 diz; (d) nomes de dominio em PORTUGUES (Produto, Pedido, Plataforma) para casar com o banco; (e) arquivos snake_case.dart, classes PascalCase; colunas do banco snake_case em portugues, usar @JsonKey(name:) quando o nome Dart diferir; (f) cada classe criada e documentada em docs/classes/documento_dominio.md (estilo de docs/classes/documento_core.md), atualizado a cada alteracao; (g) calculos puros SEM dependencia de Flutter/Supabase (so dart + decimal + entidades).",
+  "key_patterns": "Formatacao e normalizacao de texto JA EXISTEM e NAO devem ser reimplementadas: lib/core/format/formatos.dart (Formatos.moeda/percentual/data/abelinhas/parseNumero/parseDecimal) e lib/core/format/padrao_escrita.dart (PadraoEscrita.titulo/frase/maius). Testes seguem o estilo de test/core/format/*_test.dart (group/test, initializeDateFormatting('pt_BR') em setUpAll quando usar intl). Documentacao de classe segue docs/classes/documento_core.md (secao '## documento_<Classe>' com Arquivo/Responsabilidade).",
+  "relevant_files": [
+    ".kiro/specs/balcao-revenda/design.md",
+    "supabase/migrations/0001_schema.sql",
+    "assets/seed/dados-iniciais.json",
+    "lib/core/format/formatos.dart",
+    "lib/core/format/padrao_escrita.dart",
+    "analysis_options.yaml",
+    "pubspec.yaml",
+    "docs/classes/documento_core.md",
+    "test/core/format/formatos_test.dart",
+    ".kiro/steering/structure.md",
+    ".kiro/steering/tech.md"
+  ],
+  "directory_structure": "lib/core/{config,theme,format} (ja existe, nao mexer). CRIAR lib/domain/entidades/ (entidades freezed + conversores) e lib/domain/calculos/ (funcoes puras). CRIAR test/domain/calculos/ (vetores §6) e test/domain/entidades/ (round-trip fromJson/toJson) e um helper test/domain/seed_helper.dart para ler assets/seed/dados-iniciais.json nos vetores §6.6. Seed JSON top-level: configuracoes, faixas_abelinha, plataformas (com faixas), destinos, produtos (99; cada produto tem codigo/nome/marca/categoria/fornecedor/custo/unidade/estoque/ean/ativo/obs/abelinhas_manual), compras_insumo, produtos_venda (itens + precos_plataforma), pedidos (itens com tipo/ref/quantidade), investimentos, saques (rateio), retiradas."
+}

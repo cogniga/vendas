@@ -1,0 +1,1731 @@
+{
+ "versao": 1,
+ "observacao": "Dados da planilha produtos-loja-online.xlsx, normalizados (padrão de escrita e acentos). Referências por código/nome; o importador resolve para UUID.",
+ "configuracoes": {
+  "embalagem_padrao": 0.9,
+  "impressao_padrao": 1,
+  "valor_abelinha": 10
+ },
+ "faixas_abelinha": [
+  {
+   "custo_ate": 5,
+   "abelinhas": 0.5
+  },
+  {
+   "custo_ate": 8,
+   "abelinhas": 1
+  },
+  {
+   "custo_ate": 12,
+   "abelinhas": 1.5
+  },
+  {
+   "custo_ate": 16,
+   "abelinhas": 2
+  },
+  {
+   "custo_ate": 20,
+   "abelinhas": 2.5
+  },
+  {
+   "custo_ate": 24,
+   "abelinhas": 3
+  },
+  {
+   "custo_ate": 28,
+   "abelinhas": 3.5
+  },
+  {
+   "custo_ate": 32,
+   "abelinhas": 4
+  }
+ ],
+ "plataformas": [
+  {
+   "nome": "Shopee",
+   "cor": "#F0846A",
+   "obs": "Faixas da sua planilha (taxa fixa + %).",
+   "faixas": [
+    {
+     "preco_ate": 79.99,
+     "taxa_fixa": 4,
+     "taxa_percentual": 20
+    },
+    {
+     "preco_ate": 99.99,
+     "taxa_fixa": 16,
+     "taxa_percentual": 14
+    },
+    {
+     "preco_ate": 199.99,
+     "taxa_fixa": 20,
+     "taxa_percentual": 14
+    },
+    {
+     "preco_ate": null,
+     "taxa_fixa": 26,
+     "taxa_percentual": 14
+    }
+   ]
+  },
+  {
+   "nome": "TikTok Shop",
+   "cor": "#5BB8C2",
+   "obs": "Valores de exemplo: ajuste com a taxa do seu contrato.",
+   "faixas": [
+    {
+     "preco_ate": null,
+     "taxa_fixa": 4,
+     "taxa_percentual": 12
+    }
+   ]
+  },
+  {
+   "nome": "Mercado Livre",
+   "cor": "#E5BF55",
+   "obs": "Valores de exemplo: ajuste conforme categoria e tipo de anúncio.",
+   "faixas": [
+    {
+     "preco_ate": 78.99,
+     "taxa_fixa": 6.25,
+     "taxa_percentual": 14
+    },
+    {
+     "preco_ate": null,
+     "taxa_fixa": 0,
+     "taxa_percentual": 14
+    }
+   ]
+  },
+  {
+   "nome": "Venda direta",
+   "cor": "#9A8FD4",
+   "obs": "Sem taxa (WhatsApp, Instagram, balcão).",
+   "faixas": [
+    {
+     "preco_ate": null,
+     "taxa_fixa": 0,
+     "taxa_percentual": 0
+    }
+   ]
+  }
+ ],
+ "destinos": [
+  {
+   "nome": "Cartão, empréstimos",
+   "cor": "#6A9FD8",
+   "percentual": 40
+  },
+  {
+   "nome": "Compras de produtos",
+   "cor": "#6FB59A",
+   "percentual": 30
+  },
+  {
+   "nome": "Pró-labore",
+   "cor": "#E5BF55",
+   "percentual": 30
+  }
+ ],
+ "produtos": [
+  {
+   "codigo": "SACHEB",
+   "nome": "Sachê Máscara Facial",
+   "marca": "Isis",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 0.75,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "SACHER",
+   "nome": "Sachê Máscara Facial",
+   "marca": "Isis",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 0.77,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "SACHEA",
+   "nome": "Sachê Máscara Facial",
+   "marca": "Isis",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 0.77,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "SACHEO",
+   "nome": "Sachê Máscara Facial",
+   "marca": "Isis",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 0.77,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "ESP",
+   "nome": "Esponja Maquiagem",
+   "marca": "Sortidas",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 1.07,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "JJ",
+   "nome": "Lixa",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 1.15,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LEN",
+   "nome": "Lenço Removedor Maquiagem",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 1.49,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "I",
+   "nome": "Lenço Umedecido",
+   "marca": "Vivai",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 1.49,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "L1",
+   "nome": "Lápis de Olhos 2 em 1",
+   "marca": "Pink 21",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 1.59,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "DD",
+   "nome": "Touca",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 1.61,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "KK",
+   "nome": "Máscara Labial",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 1.64,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "EE",
+   "nome": "Esponja de Maquiagem Manga",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 1.93,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "FF",
+   "nome": "Kit Amor Belém",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 2.34,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "C1",
+   "nome": "Caneta Delineadora",
+   "marca": "4angels",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 2.44,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "T",
+   "nome": "Esponja Limpeza Facial",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 2.54,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "II",
+   "nome": "Cílios Postiços",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 2.65,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "B",
+   "nome": "Máscara para os Pés",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 2.78,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "SB",
+   "nome": "Sabão em Pó 800",
+   "marca": "Ki Joia",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 2.8,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "X",
+   "nome": "Pirulito que Bate Bate",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 3,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "HH",
+   "nome": "Kit Xuxinha",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 3.13,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "NN",
+   "nome": "Íntimo Rosa Mosqueta",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 3.18,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "D",
+   "nome": "Sabonete Íntimo Morango",
+   "marca": "Babasoul",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 3.26,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "MM",
+   "nome": "Sabonete Íntimo Baba",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 3.26,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "SS",
+   "nome": "Kit Esponja",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 3.62,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "E",
+   "nome": "Adesivo de Espinha",
+   "marca": "Sm Make",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 3.7,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "K",
+   "nome": "Sabonete Facial Rosa Mosqueta",
+   "marca": "Isis",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 3.7,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "PO",
+   "nome": "Pó Facial Banana 10g",
+   "marca": "Isis Make Up",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 3.71,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "A",
+   "nome": "Água Micelar 7 em 1",
+   "marca": "Isis",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 4.15,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "PERF",
+   "nome": "Perfume Sensual",
+   "marca": "Apinil",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 4.39,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LPV1",
+   "nome": "Lip Volumoso",
+   "marca": "Sky Hight",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 4.68,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "J",
+   "nome": "Sabonete Líquido Facial e Corporal Pitaya",
+   "marca": "Bria",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 4.74,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "GG",
+   "nome": "Kit Esponja Ursinho",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 4.83,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "G",
+   "nome": "Tônico Facial",
+   "marca": "Isis",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 4.89,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "O",
+   "nome": "Máscara Facial Bisnaga",
+   "marca": "Max Love",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "W",
+   "nome": "Jelly Lipstick",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 3.25,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "Y",
+   "nome": "Esfoliante Vaquinha",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "N",
+   "nome": "Escova de Cabelo Orelhinha",
+   "marca": "Sm Make",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.07,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "F",
+   "nome": "HD Labial Morango Beautyloo",
+   "marca": "Face Beautiful",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.1,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "ESF",
+   "nome": "Esfoliante Hidratante",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.41,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "PP",
+   "nome": "Bruma Matte Fix",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.46,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "L",
+   "nome": "Loção Hidratante Corporal Rosa Mosqueta",
+   "marca": "Apinil",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.54,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "S",
+   "nome": "Hidratante Corporal Puro Leite",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.54,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LL",
+   "nome": "Pincel de Limpeza",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.56,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "SHAMP",
+   "nome": "Shampoo Silicone",
+   "marca": "Soul",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.81,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "COND",
+   "nome": "Condicionador Silicone",
+   "marca": "Soul",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.81,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "MASC",
+   "nome": "Máscara Silicone",
+   "marca": "Soul",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.81,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "CHSTICH-AZ",
+   "nome": "Chaveiro com Alça Azul",
+   "marca": "Strich",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "CHSTICH-RS",
+   "nome": "Chaveiro com Alça Rosa",
+   "marca": "Strich",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "AA",
+   "nome": "Body Obsessão",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.01,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "BMELU",
+   "nome": "Blush Melu",
+   "marca": "Ruby Rose",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.08,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "R",
+   "nome": "Spray Desembaraçante de Cabelo",
+   "marca": "Soul",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.19,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "C",
+   "nome": "Body Splash Puro Leite",
+   "marca": "Cap Life",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.22,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "PROG",
+   "nome": "Progressiva de Chuveiro",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.45,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "PB",
+   "nome": "Gloss Playboy",
+   "marca": "Max Lip",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.45,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "CT1",
+   "nome": "Cream Tint",
+   "marca": "Ruby Rose",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.45,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "U",
+   "nome": "Perfume Capilar",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.49,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "P2",
+   "nome": "Billion Men Mini",
+   "marca": "Clive Dorris",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.8,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "P3",
+   "nome": "Col Gril Mini",
+   "marca": "Clive Dorris",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.8,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "P1",
+   "nome": "Perfume de Bolsa 217",
+   "marca": "Yasmim e Ju",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.9,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "SOMBRA",
+   "nome": "Paleta de Sombras",
+   "marca": "Ruby Rose",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.99,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "MS1",
+   "nome": "Máscara p/ Cílios",
+   "marca": "T G Tango",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "P",
+   "nome": "Lip Gloss Morango 24h",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "H",
+   "nome": "Mousse Facial Uva",
+   "marca": "Cap Life",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7.16,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "Z",
+   "nome": "Mousse Micelar Good",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7.23,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "GLOSS",
+   "nome": "Lipgloss",
+   "marca": "Belle Angel",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7.35,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "Q",
+   "nome": "Sabonete Líquido Corporal Mel",
+   "marca": "Bria",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7.39,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "RR",
+   "nome": "Base Líquida Alleva",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7.43,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LIPM",
+   "nome": "Lip Gloss Morango",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7.5,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "M",
+   "nome": "Reparador de Pontas",
+   "marca": "Soul Cosméticos",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7.5,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "GELEIA",
+   "nome": "Geleia de Brilho",
+   "marca": "Isis",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7.82,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LPV3",
+   "nome": "Lip Gloss Cupcake",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 8,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "CC",
+   "nome": "Body Alleva",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 8.8,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "BASE",
+   "nome": "Base Líquida",
+   "marca": "Belle Angel",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 8.97,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "QQ",
+   "nome": "Bumbum Creme",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 9.03,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "BB",
+   "nome": "Geleia Hidratante Alleva",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 9.3,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "PO1",
+   "nome": "Pó de Fada 3 Cores",
+   "marca": "Sarah's Beauty",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 10.5,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "BODY",
+   "nome": "Body Splash",
+   "marca": "Soul",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 10.69,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "BATOM",
+   "nome": "Batom Bolsinha",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 11.38,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "K1",
+   "nome": "Kit 7 Pincéis",
+   "marca": "Ruby Anjo",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 13.6,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "V",
+   "nome": "Protetor Solar",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 14.65,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "PB2",
+   "nome": "Billion Men Body Splash",
+   "marca": "Clive Dorris",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 15.6,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "PB3",
+   "nome": "Col Gril Body Splash",
+   "marca": "Clive Dorris",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 15.6,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "OO",
+   "nome": "Box Kit Skin Care",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 18.49,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "K2",
+   "nome": "Kit Love Rain",
+   "marca": "Love Rain",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 21.69,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "K3",
+   "nome": "Kit Love Rain Gloss",
+   "marca": "Love Rain",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 17.8,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "K4",
+   "nome": "Sérum Facial",
+   "marca": "Isis",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 4.32,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "K5",
+   "nome": "Caneta Delineadora",
+   "marca": "Ruby Rose",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 2.99,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "K6",
+   "nome": "Lip Gloss Donuts",
+   "marca": "Love Rain",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 7.3,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LL2",
+   "nome": "Sabonete Corporal Puro Leite",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 5.4,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LL3",
+   "nome": "Body Splash Puro Leite",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.22,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LL4",
+   "nome": "Esfoliante Puro Leite",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.86,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LL5",
+   "nome": "Love Rain Perfume",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 15.59,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "PP1",
+   "nome": "Pincel",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 15,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LL6",
+   "nome": "Hidratante Corporal Hydra Soul",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 6.88,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "LL7",
+   "nome": "Shampoo, Condicionador e Máscara",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 14.5,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "BB1",
+   "nome": "Base Love Rain",
+   "marca": "Love Rain",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 11,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "SH1",
+   "nome": "Shampoo a Seco",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 9.49,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "S-100",
+   "nome": "Super 100",
+   "marca": "Bellafemme",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 11.22,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  },
+  {
+   "codigo": "MANT",
+   "nome": "Manteiga Corporal",
+   "marca": "",
+   "categoria": "Cosméticos",
+   "fornecedor": "",
+   "custo": 9.03,
+   "unidade": "un",
+   "estoque": 0,
+   "ean": "",
+   "ativo": true,
+   "obs": "",
+   "abelinhas_manual": null
+  }
+ ],
+ "compras_insumo": [
+  {
+   "ref": "c1",
+   "data": "2026-06-13",
+   "tipo": "Embalagem",
+   "produto": "Caixa Papelão Correios",
+   "descricao": "16X11x3",
+   "valor_total": 46.99,
+   "pacotes": 1,
+   "itens": 50,
+   "destino": "Compras de produtos"
+  }
+ ],
+ "produtos_venda": [
+  {
+   "nome": "Batom Bolsinha",
+   "embalagem": 0.9,
+   "impressao": 1,
+   "outros": 0,
+   "preco": 26.49,
+   "desconto": 1,
+   "cupom": 2,
+   "preco_concorrente": null,
+   "meta_lucro": 200,
+   "fatia_roas": 0.3,
+   "margem_alvo": 30,
+   "itens": [
+    {
+     "produto": "BATOM",
+     "quantidade": 1
+    }
+   ],
+   "precos_plataforma": [
+    {
+     "plataforma": "Shopee",
+     "vendidos_iniciais": 13
+    }
+   ]
+  },
+  {
+   "nome": "Kit Maquiagem Base Líquida Pó Banana Lip Gloss Combo Make Iniciante Completo",
+   "embalagem": 0.9,
+   "impressao": 1,
+   "outros": 0,
+   "preco": 59.9,
+   "desconto": 15,
+   "cupom": 0,
+   "preco_concorrente": null,
+   "meta_lucro": 200,
+   "fatia_roas": 0.3,
+   "margem_alvo": 30,
+   "itens": [
+    {
+     "produto": "BASE",
+     "quantidade": 1
+    },
+    {
+     "produto": "GLOSS",
+     "quantidade": 1
+    },
+    {
+     "produto": "PO",
+     "quantidade": 1
+    }
+   ],
+   "precos_plataforma": [
+    {
+     "plataforma": "Shopee",
+     "vendidos_iniciais": 2
+    }
+   ]
+  },
+  {
+   "nome": "Kit 5 Sachês",
+   "embalagem": 0.9,
+   "impressao": 1,
+   "outros": 0,
+   "preco": 19.99,
+   "desconto": 2,
+   "cupom": 1,
+   "preco_concorrente": null,
+   "meta_lucro": 200,
+   "fatia_roas": 0.3,
+   "margem_alvo": 30,
+   "itens": [
+    {
+     "produto": "SACHER",
+     "quantidade": 5
+    }
+   ],
+   "precos_plataforma": [
+    {
+     "plataforma": "Shopee",
+     "vendidos_iniciais": 1
+    }
+   ]
+  }
+ ],
+ "pedidos": [
+  {
+   "data": "2026-10-12",
+   "cliente": "KT01-DALILA",
+   "plataforma": "TikTok Shop",
+   "embalagem": 0.9,
+   "impressao": 1,
+   "outros": 0,
+   "preco_venda": 110,
+   "itens_taxa_fixa": 1,
+   "liquido_informado": 85.85,
+   "situacao": "concluido",
+   "obs": "Da aba vendas da planilha",
+   "itens": [
+    {
+     "tipo": "produto",
+     "ref": "K2",
+     "quantidade": 1
+    },
+    {
+     "tipo": "produto",
+     "ref": "L1",
+     "quantidade": 2
+    },
+    {
+     "tipo": "produto",
+     "ref": "C1",
+     "quantidade": 1
+    },
+    {
+     "tipo": "produto",
+     "ref": "PB",
+     "quantidade": 1
+    },
+    {
+     "tipo": "produto",
+     "ref": "PB3",
+     "quantidade": 1
+    }
+   ]
+  },
+  {
+   "data": "2026-10-13",
+   "cliente": "KT01-THAIS",
+   "plataforma": "TikTok Shop",
+   "embalagem": 0.9,
+   "impressao": 1,
+   "outros": 0,
+   "preco_venda": 110,
+   "itens_taxa_fixa": 1,
+   "liquido_informado": 97.4,
+   "situacao": "concluido",
+   "obs": "Da aba vendas da planilha",
+   "itens": [
+    {
+     "tipo": "produto",
+     "ref": "K2",
+     "quantidade": 1
+    },
+    {
+     "tipo": "produto",
+     "ref": "GLOSS",
+     "quantidade": 1
+    },
+    {
+     "tipo": "produto",
+     "ref": "CT1",
+     "quantidade": 1
+    },
+    {
+     "tipo": "produto",
+     "ref": "LPV1",
+     "quantidade": 1
+    },
+    {
+     "tipo": "produto",
+     "ref": "L1",
+     "quantidade": 1
+    }
+   ]
+  }
+ ],
+ "investimentos": [
+  {
+   "data": "2026-06-08",
+   "distribuidor": "Pérolas Make",
+   "valor": 209.19,
+   "nota": "",
+   "destino": "Compras de produtos",
+   "obs": ""
+  }
+ ],
+ "saques": [
+  {
+   "data": "2026-10-16",
+   "plataforma": "TikTok Shop",
+   "valor": 3286.06,
+   "obs": "",
+   "rateio": [
+    {
+     "destino": "Cartão, empréstimos",
+     "percentual": 40
+    },
+    {
+     "destino": "Compras de produtos",
+     "percentual": 30
+    },
+    {
+     "destino": "Pró-labore",
+     "percentual": 30
+    }
+   ]
+  }
+ ],
+ "retiradas": []
+}

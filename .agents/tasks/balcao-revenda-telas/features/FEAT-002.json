@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Telas de configuracao de cobranca e financeiro simples: Plataformas e taxas (R6), Compras de insumos (R7) e Investimento (R8). Todas sao CRUD + listas responsivas + formularios em painel lateral 560px, reutilizando PainelLateral/EstadoLista da FEAT-001 e o calculo taxa() de lib/domain/calculos/taxas.dart (simulacao de taxa/liquido). Independente das FEATs 003/004; depende da FEAT-001 apenas pelos helpers compartilhados.",
+  "status": "pending",
+  "steps": [
+    "LER PRIMEIRO: context.json e este FEAT; depois requirements.md (R6, R7, R8, R13, estados §10), design.md §4/§5/§6.1/§7/§8/§10, docs/prototipo/balcao-revenda.html (plataformas, insumos, investimento) e docs/telas/12-plataformas.png, 09-insumos.png, 10-investimento.png. Reutilizar PainelLateral/EstadoLista (findings da FEAT-001) e os componentes de lib/core/widgets.",
+    "PLATAFORMAS — application: lib/features/plataformas/application/plataformas_providers.dart com plataformasProvider (FutureProvider que le empresaAtualProvider e chama plataformaRepositoryProvider.listarComFaixas(empresa.id) -> Map<Plataforma,List<FaixaTaxa>>) e um PlataformasController (StateNotifier<AsyncValue<void>>) com criar(nome), renomear(id,nome), mudarCor via atualizarAparencia(id,cor,obs), substituirFaixas(plataformaId, faixas) e excluir(id) — tratando ErroRepositorio quando a plataforma esta em uso (R6.4). Invalidar plataformasProvider ao concluir.",
+    "PLATAFORMAS — tela: substituir lib/features/plataformas/presentation/plataformas_page.dart. PageHeader + botao 'Nova plataforma'. Um cartao por plataforma (PlatformPill com nome/cor) com faixas editaveis em tabela/linhas: 'preco ate (R$)' (vazio = sem limite), 'taxa fixa (R$)', 'percentual (%)'; adicionar/remover faixas (minimo 1). Para cada plataforma, um quadro de simulacao de taxa e liquido para os precos 19,99 / 59,90 / 89,90 / 149,90 / 249,90 usando taxa(faixas, preco) e liquido = preco - taxa (Formatos.moedaDecimal). Acoes: renomear (TextCaseField caso:titulo), mudar cor (seletor/hex), excluir (ConfirmDeleteButton; se o repo lancar ErroRepositorio por uso em pedidos/saques, mostrar diálogo explicando). Salvar faixas via substituirFaixas. Estados §10. Sem rolagem horizontal.",
+    "INSUMOS — application: lib/features/compras_insumos/application/insumos_providers.dart (comprasInsumoProvider via compraInsumoRepositoryProvider.listar; destinosProvider via destinoRepositoryProvider.listar para 'pago com') e insumo_form_controller.dart (criar/atualizar/excluir). KPI 'Total em insumos' = soma de valorTotal (calcular em um provider derivado).",
+    "INSUMOS — tela: substituir lib/features/compras_insumos/presentation/insumos_page.dart. PageHeader + 'Nova compra'; KpiRow com 'Total em insumos'. ResponsiveList<CompraInsumo>: compra (principal: produto em destaque; data·tipo·descricao abaixo via Formatos.data), quantidade (itens; pacotes abaixo), valor (Formatos.moedaDecimal(valorTotal); valor por item = valorTotal/itens abaixo), pago com (nome do destino ou 'Nao descontar'), acoes editar/excluir. Formulario em PainelLateral 560px: data, tipo (dropdown: Embalagem, Etiqueta, Impressao, Fita/lacre, Brinde, Outros), produto (TextCaseField titulo), descricao/medida (TextCaseField frase), MoneyField valor total, int pacotes, int itens, 'pago com' (dropdown destinos ou 'nao descontar do caixa'). Valor unitario (valorTotal ÷ itens) ao vivo no formulario (R7.2). Estados §10.",
+    "INVESTIMENTO — application: lib/features/investimento/application/investimento_providers.dart (investimentosProvider via investimentoRepositoryProvider.listar; destinos) e investimento_form_controller.dart. Providers derivados para KPIs: total investido (soma de valor) e os 3 maiores distribuidores com % do total (agrupar por distribuidor, somar, ordenar desc, top 3; % = soma/total).",
+    "INVESTIMENTO — tela: substituir lib/features/investimento/presentation/investimento_page.dart. PageHeader + 'Registrar investimento'; KpiRow (total investido; 3 maiores distribuidores com %). ResponsiveList<Investimento>: distribuidor (principal; data·nota·observacao abaixo), valor (Formatos.moedaDecimal; % do total abaixo), pago com (destino), acoes editar/excluir. Formulario PainelLateral 560px: data, distribuidor (TextCaseField titulo), MoneyField valor, nota/nº do pedido (TextCaseField maius), pago com (dropdown destinos), observacao (TextCaseField frase). Estados §10.",
+    "Atualizar docs/classes (documento_features.md ou documento_plataformas.md/documento_insumos.md/documento_investimento.md) com cada classe nova (providers, controllers, pages, widgets).",
+    "Se criou @riverpod/@freezed, rodar build_runner. flutter analyze (limpo) e flutter test (manter verdes + novos). Registrar em findings os nomes de providers/controllers e eventuais ajustes; marcar 'completed'."
+  ],
+  "acceptance_criteria": [
+    "plataformas_page.dart lista uma plataforma por cartao com faixas editaveis (preco ate/fixo/%) e simulacao de taxa+liquido para 19,99/59,90/89,90/149,90/249,90 (usando taxa() do dominio); criar/renomear/cor/excluir funcionam e exclusao bloqueada por uso mostra diálogo",
+    "insumos_page.dart tem KPI 'Total em insumos', lista responsiva (R7.3) e formulario com valor unitario (valor ÷ itens) ao vivo; normalizacao de texto aplicada",
+    "investimento_page.dart tem KPIs (total investido; 3 maiores distribuidores com %), lista responsiva (R8.3) e formulario completo; sem 'Em construcao'",
+    "Nenhuma chamada Supabase em widget; sem rolagem horizontal; excluir sempre com confirmacao; estados §10 presentes",
+    "flutter analyze limpo; flutter test verde (baseline + novos)",
+    "docs/classes atualizado"
+  ],
+  "verification": [
+    "cd /Users/raquel/Documents/projetos/front/private/sales && export PATH=\"$PATH:/Users/raquel/Documents/sdk/flutter/bin\"",
+    "dart run build_runner build --delete-conflicting-outputs  # so se criou @riverpod/@freezed",
+    "flutter analyze",
+    "flutter test"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

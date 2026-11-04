@@ -18,6 +18,23 @@ Future<void> inicializarSupabase() async {
   );
 }
 
+/// Garante uma sessão anônima no Supabase quando não houver usuário logado.
+///
+/// Permite acessar as tabelas (sob RLS) sem uma tela de login real. É seguro:
+/// o usuário anônimo é um usuário de verdade, então a RLS continua valendo.
+/// Não lança em caso de falha (ex.: anônimo desabilitado no projeto) — apenas
+/// registra o erro e segue; a camada de dados tratará a ausência de sessão.
+Future<void> garantirSessaoAnonima() async {
+  if (!Ambiente.supabaseConfigurado) return;
+  final auth = Supabase.instance.client.auth;
+  if (auth.currentSession != null) return;
+  try {
+    await auth.signInAnonymously();
+  } on Object catch (_) {
+    // Anônimo pode estar desabilitado no projeto; segue sem sessão.
+  }
+}
+
 /// Expõe o [SupabaseClient] para as camadas de dados via Riverpod.
 final supabaseClientProvider = Provider<SupabaseClient>((ref) {
   return Supabase.instance.client;

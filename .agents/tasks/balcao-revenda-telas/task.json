@@ -1,0 +1,7 @@
+{
+  "task_id": "task-balcao-revenda-telas",
+  "task_description": "Implementar o conteudo real das 10 telas internas do app Flutter 'Balcao Revenda' (repo direto, branch main, SEM push), substituindo os placeholders *_page.dart. Cada feature ganha providers/controllers em application/ que falam com os repositorios existentes e consome os calculos puros de lib/domain/calculos e a formatacao de lib/core/format (NAO reimplementar). Login local adm/adm permanece ativo. 4 FEATs sequenciais, agrupadas por padrao/dependencia: F1 helpers + Produtos + Abelinhas; F2 Plataformas + Insumos + Investimento; F3 Composicao/kits + Pedidos (editores largos); F4 Caixa + Painel + Configuracoes.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}
