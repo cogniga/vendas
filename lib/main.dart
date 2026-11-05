@@ -8,6 +8,5 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Ambiente.carregar();
   await inicializarSupabase();
-  await garantirSessaoAnonima();
   runApp(const ProviderScope(child: BalcaoRevendaApp()));
 }

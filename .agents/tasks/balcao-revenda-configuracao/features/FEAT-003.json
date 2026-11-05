@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Tela DADOS E CONFIGURAÇÕES (R14 + R12). Substituir o placeholder lib/features/configuracoes/presentation/configuracoes_page.dart: padrões de custo (embalagem, impressão) e valor da abelinha persistidos em Configuracoes; seletor de tema Claro/Escuro/Auto via temaProvider; 'Exportar dados (JSON)' (copia o JSON da empresa para a área de transferência + campo copiável) e 'Importar dados (JSON)' (lê JSON colado e popula via ImportadorSeed.importarDados); quadro 'Padrão de escrita' com as 3 regras e exemplos (§8/R12.2); botão 'Importar dados da planilha' (seed) só quando a empresa estiver vazia; botão 'Sair' (authControllerProvider.sair). SEM dependência nova (clipboard + textarea, como o protótipo V.dados). Independente de FEAT-001 e FEAT-002.",
+  "status": "pending",
+  "steps": [
+    "LER PRIMEIRO: context.json e este arquivo; plan.md passos C.9–C.12. Abrir docs/prototipo/balcao-revenda.html V.dados (~linha 685) e docs/telas/14-configuracoes.png. Confirmar o formato do JSON lendo lib/features/onboarding/application/importador_seed.dart (chaves que importarDados consome: configuracoes, plataformas[.faixas], destinos, faixas_abelinha, produtos, produtos_venda, compras_insumo, investimentos, pedidos, saques).",
+    "Criar lib/features/configuracoes/application/exportador_dados.dart: serviço ExportadorDados que recebe os repositórios (configuracoes, plataforma, destino, faixaAbelinha, produto, produtoVenda, compraInsumo, investimento, pedido, saque) e monta um Map<String,dynamic> no MESMO formato consumido por ImportadorSeed.importarDados (Decimais como String; datas ISO yyyy-MM-dd). Provider exportadorDadosProvider. Confirmar as chaves 1:1 com importador_seed.dart durante a implementação.",
+    "Criar lib/features/configuracoes/application/configuracoes_providers.dart: reusar/expor configuracoesProvider (pode importar o de composicao) e criar empresaVaziaProvider (FutureProvider<bool>: true quando produtos/pedidos/compras/investimentos/kits estão todos vazios) para controlar a visibilidade de 'Importar dados da planilha'.",
+    "Criar lib/features/configuracoes/application/configuracoes_controller.dart: StateNotifier com salvarPadroes(embalagem,impressao) e salvarValorAbelinha(v) -> configuracoesRepository.atualizar(config.copyWith(...)) + invalidar configuracoesProvider e dadosAbelinhasProvider; exportarJson()->String (ExportadorDados + json.encode); importarJson(String)->Future<bool> (json.decode -> importadorSeedProvider.importarDados(empresaId, mapa); capturar erro e expor mensagem; invalidar providers afetados); restaurarSeed() (importadorSeedProvider.importar(empresaId), só quando empresa vazia). Expor estado salvando/erro/sucesso.",
+    "Substituir lib/features/configuracoes/presentation/configuracoes_page.dart: raiz Column(mainAxisSize.min, crossAxisAlignment.stretch). PageHeader(title:'Dados e configurações', subtitle). Consumir configuracoesProvider.when(loading/error/data). Seções em grade responsiva (LayoutBuilder 2->1 coluna, Wrap): (a) Padrões de custo: MoneyField embalagem e impressão (initial=config) onChanged->controller.salvarPadroes (debounce); (b) Valor da abelinha: MoneyField/TextField decimal (aceita vírgula) persistindo valorAbelinha e invalidando dadosAbelinhasProvider; (c) Tema: três botões Claro/Escuro/Auto via ref.watch(temaProvider) + ref.read(temaProvider.notifier).definir(ThemeMode.{light,dark,system}) com Tooltip+Semantics (reusar visual do _SeletorTema do AppShell); (d) Backup: 'Exportar dados (JSON)' -> Clipboard.setData(ClipboardData(text: controller.exportarJson())) + preencher um TextField multiline copiável + SnackBar 'Copiado'; 'Importar dados (JSON)' -> ler o texto do TextField, diálogo de confirmação, controller.importarJson, SnackBar de resultado; (e) 'Importar dados da planilha': visível só quando empresaVaziaProvider==true, com confirmação -> controller.restaurarSeed(); (f) 'Padrão de escrita' (R12.2): quadro/Ledger com as 3 regras e exemplos (Nomes->Título 'Lápis de Olhos 2 em 1'; Códigos->MAIÚSCULO 'KT01-DALILA'; Descrições->Frase 'Compras de produtos') + nota de conectivos/siglas (texto do protótipo / design §8); (g) 'Sair' -> ref.read(authControllerProvider.notifier).sair().",
+    "Criar test/features/configuracoes_page_test.dart: com ProviderScope (override configuracoesProvider com um Configuracoes fixo e empresaVaziaProvider true/false), verificar que renderiza sem exceção, mostra as três linhas do 'Padrão de escrita' e que 'Importar dados da planilha' aparece só quando a empresa está vazia. Não exercitar Supabase real.",
+    "Rodar flutter analyze (No issues found!) e flutter test (verde). Atualizar status para completed e registrar em findings os providers/serviços criados e o formato do JSON confirmado. Commit local (sem push)."
+  ],
+  "acceptance_criteria": [
+    "flutter analyze termina com 'No issues found!'",
+    "flutter test passa todos (base + novo teste de configurações)",
+    "A página de Configurações não é mais 'Em construção': padrões de custo e valor da abelinha persistem; tema muda ao vivo (Claro/Escuro/Auto); Exportar copia o JSON e Importar repovoa a empresa a partir do JSON colado",
+    "'Importar dados da planilha' só aparece quando a empresa está vazia; 'Sair' chama authControllerProvider.sair(); quadro 'Padrão de escrita' mostra as 3 regras com exemplos",
+    "Raiz da página é Column(mainAxisSize.min); sem ListView/Column.max; sem dependência nova no pubspec; sem crash com empresa/listas vazias"
+  ],
+  "verification": [
+    "flutter analyze",
+    "flutter test test/features/configuracoes_page_test.dart",
+    "flutter test"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

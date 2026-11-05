@@ -11,13 +11,24 @@ class ConfiguracoesRepository {
   final SupabaseClient _client;
 
   /// Obtém as configurações da empresa [empresaId].
+  ///
+  /// Se a empresa ainda não tiver uma linha de configurações (ex.: empresa
+  /// criada manualmente, sem passar pela RPC `criar_empresa`), cria uma com
+  /// os valores padrão e a retorna.
   Future<Configuracoes> obter(String empresaId) async {
     final linha = await _client
         .from('configuracoes')
         .select()
         .eq('empresa_id', empresaId)
+        .maybeSingle();
+    if (linha != null) return Configuracoes.fromJson(linha);
+
+    final criada = await _client
+        .from('configuracoes')
+        .insert({'empresa_id': empresaId})
+        .select()
         .single();
-    return Configuracoes.fromJson(linha);
+    return Configuracoes.fromJson(criada);
   }
 
   /// Atualiza as configurações da empresa dona de [config].

@@ -142,15 +142,9 @@ class _Corpo extends StatelessWidget {
         final padding = constraints.maxWidth < 600
             ? Espacos.paddingPainelCelular
             : Espacos.paddingPainel;
-        final alturaMin = constraints.hasBoundedHeight
-            ? constraints.maxHeight
-            : 0.0;
         return SingleChildScrollView(
           padding: EdgeInsets.all(padding),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: alturaMin),
-            child: child,
-          ),
+          child: child,
         );
       },
     );

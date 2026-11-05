@@ -1,0 +1,7 @@
+{
+  "task_id": "task-balcao-revenda-configuracao",
+  "task_description": "Implementar o grupo CONFIGURAÇÃO do app Flutter Balcão Revenda (pacote sales): PLATAFORMAS E TAXAS (R6), REGRA DE ABELINHAS (R9, já implementada — auditar/ajustar) e DADOS E CONFIGURAÇÕES (R14+R12). Seguir fielmente o protótipo docs/prototipo/balcao-revenda.html. Trabalhar na branch main, sem push. Manter flutter analyze limpo e flutter test verde (base 54 testes).",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

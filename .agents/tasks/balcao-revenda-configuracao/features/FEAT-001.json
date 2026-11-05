@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Tela PLATAFORMAS E TAXAS (R6). Substituir o placeholder lib/features/plataformas/presentation/plataformas_page.dart por uma grade de cartões (2 colunas em tela larga, 1 em estreita; sem rolagem horizontal). Cada cartão: nome editável, cor editável, lista de faixas editáveis (preço até vazio=sem limite, taxa fixa, percentual) com adicionar/remover (mínimo 1 faixa), observação, e um Ledger de simulação para 19,99/59,90/89,90/149,90/249,90 (taxa e líquido via taxa()). Criar/renomear/mudar cor/excluir plataforma (excluir bloqueado quando usada em pedidos/saques, mostrando o motivo; impedir excluir a última, mínimo 1). Salvar ao editar (autosave com debounce ~500ms), como no protótipo V.plataformas. Independente de FEAT-002 e FEAT-003.",
+  "status": "pending",
+  "steps": [
+    "LER PRIMEIRO: context.json e este arquivo; e .agents/tasks/balcao-revenda-configuracao/plan.md (passos A.1–A.6). Abrir docs/prototipo/balcao-revenda.html V.plataformas (~linha 617) e docs/telas/12-plataformas.png como fonte da verdade.",
+    "Criar lib/features/plataformas/application/plataformas_providers.dart: plataformasProvider (FutureProvider.autoDispose<Map<Plataforma,List<FaixaTaxa>>>) lendo empresaAtualProvider e chamando plataformaRepositoryProvider.listarComFaixas; retornar {} quando empresa==null. Espelhar plataformasComFaixasProvider de lib/features/composicao/application/composicao_providers.dart (pode importar e reusar aquele em vez de duplicar; se duplicar, documentar no doc-comment).",
+    "Criar lib/features/plataformas/application/plataformas_controller.dart: StateNotifier que mantém as plataformas+faixas em edição e persiste com debounce. Métodos: criarPlataforma() (plataformaRepository.criar(empresaId, 'Nova plataforma') e logo substituirFaixas com UMA faixa inicial sem limite [precoAte:null, taxaFixa:0, taxaPercentual:0], pois criar() não cria faixa; depois invalidar plataformasProvider e plataformasComFaixasProvider); renomear(id,nome) com debounce -> renomear (normalizar com PadraoEscrita.titulo ao persistir); mudarAparencia(id,cor,obs) com debounce -> atualizarAparencia; alterarFaixa/adicionarFaixa/removerFaixa (manter mínimo 1) com debounce -> substituirFaixas(platId, empresaId, faixas); excluir(id) (se só resta 1 plataforma, não excluir e expor mensagem; capturar ErroRepositorio e expor .mensagem). Expor estado salvando/erro. Nada de Supabase direto — só repositórios via seus providers.",
+    "Substituir lib/features/plataformas/presentation/plataformas_page.dart: raiz Column(mainAxisSize.min, crossAxisAlignment.stretch). PageHeader(title:'Plataformas e taxas', subtitle: texto do protótipo sobre fixo+percentual por faixa, actions:[FilledButton.icon 'Nova plataforma' -> controller.criarPlataforma]). Consumir plataformasProvider.when(loading/error/data) com bloco de erro 'Tentar de novo' (ref.invalidate) e estado vazio sem crash. Grade responsiva via LayoutBuilder: 2 colunas quando maxWidth>=~900 senão 1, usando Wrap com largura calculada (NÃO GridView). Cada item = widget _CartaoPlataforma.",
+    "Implementar _CartaoPlataforma (no mesmo arquivo, ou extrair para lib/features/plataformas/presentation/cartao_plataforma.dart se ficar grande): Container estilo cartão (context.cores.surface, Raios.cartao, border cores.line). Cabeçalho: dot colorido com plataforma.cor + campo Nome (TextCaseField caso:titulo ou TextField) onChanged->controller.renomear + ConfirmDeleteButton(onConfirm->controller.excluir, tooltip). Seletor de cor: _SeletorCor com paleta fixa (~8 hex) de chips selecionáveis, cada um com Tooltip+Semantics(label) (sem dependência nova; o <input type=color> do protótipo vira paleta). Faixas: por faixa uma linha com 3 campos numéricos decimais — 'Preço até (R$)' (vazio => precoAte=null), 'Fixo (R$)', 'Percentual' — + remover (ConfirmDeleteButton/IconAction, desabilitado quando só há 1 faixa) e botão 'Adicionar faixa'. Usar o padrão _CampoDecimal de abelinhas_page.dart (sincroniza sem roubar foco). Observação: TextCaseField caso:frase. Ledger de simulação: para [19.99,59.90,89.90,149.90,249.90], LinhaLedger('Venda de R\\$ X', 'taxa Y · líquido Z') com taxa(faixasEmEdicao, preco) e preco - taxa(...), recalculando ao vivo a partir das faixas EM EDIÇÃO do estado.",
+    "Criar test/features/plataformas_page_test.dart: com ProviderScope sobrescrevendo plataformasProvider -> {1 Plataforma: [faixas conhecidas]}, verificar que a tela renderiza sem exceção em largura larga e estreita e exibe valores de simulação; com mapa vazio, mostra estado vazio sem crash. Seguir o padrão de test/widgets/responsive_list_test.dart e app_shell_test.dart (não tocar Supabase).",
+    "Rodar flutter analyze (No issues found!) e flutter test (verde). Atualizar status deste FEAT para completed e registrar em findings quaisquer nomes de provider/arquivo criados e decisões (ex.: se reusou plataformasComFaixasProvider). Commit local na branch (sem push)."
+  ],
+  "acceptance_criteria": [
+    "flutter analyze termina com 'No issues found!'",
+    "flutter test passa todos (base 54 + o novo teste de plataformas)",
+    "A página de Plataformas não é mais 'Em construção': mostra grade de cartões, cria/renomeia/muda cor/exclui plataforma, edita faixas (adicionar/remover, mínimo 1) e mostra o Ledger de simulação dos 5 preços com taxa e líquido corretos via taxa()",
+    "Excluir plataforma usada em pedidos/saques é bloqueado com mensagem; excluir a última é impedido",
+    "Raiz da página é Column(mainAxisSize.min); nenhum ListView/Column.max/GridView infinito; sem crash com empresa/listas vazias"
+  ],
+  "verification": [
+    "flutter analyze",
+    "flutter test test/features/plataformas_page_test.dart",
+    "flutter test"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

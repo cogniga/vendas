@@ -46,6 +46,27 @@ class EmpresaRepository {
         .maybeSingle();
     return linha == null ? null : Empresa.fromJson(linha);
   }
+
+  /// Lista TODAS as empresas (via RPC `listar_todas_empresas`), para o
+  /// seletor de empresa em Dados e configurações.
+  ///
+  /// Com o RLS desligado, consulta a tabela diretamente (sem RPC).
+  Future<List<Empresa>> listarTodas() async {
+    final linhas = await _client
+        .from('empresas')
+        .select()
+        .order('criado_em', ascending: true);
+    return linhas.map(Empresa.fromJson).toList();
+  }
+
+  /// Vincula o usuário atual como membro de [empresaId] (via RPC
+  /// `entrar_empresa`) e retorna o id. Idempotente.
+  Future<String> entrarEmpresa(String empresaId) async {
+    return _client.rpc<String>(
+      'entrar_empresa',
+      params: {'p_empresa': empresaId},
+    );
+  }
 }
 
 /// Provider do [EmpresaRepository].

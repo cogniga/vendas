@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-002",
+  "type": "refactor",
+  "description": "REGRA DE ABELINHAS (R9) — a tela JÁ ESTÁ IMPLEMENTADA (lib/features/abelinhas/presentation/abelinhas_page.dart + application/abelinhas_controller.dart + abelinhas_providers.dart). Esta FEAT é AUDITORIA + AJUSTES MÍNIMOS contra o protótipo V.abelinhas e R9, SEM reescrever e SEM alterar lib/domain/calculos/abelinhas.dart (os vetores de teste dependem dele). Independente de FEAT-001 e FEAT-003; apenas presentation (e, se necessário, o controller de estado).",
+  "status": "pending",
+  "steps": [
+    "LER PRIMEIRO: context.json e este arquivo; plan.md passos B.7–B.8. Abrir docs/prototipo/balcao-revenda.html V.abelinhas (~linha 627) e docs/telas/13-regra-abelinhas.png.",
+    "Auditar abelinhas_page.dart/abelinhas_controller.dart contra R9 e o protótipo. Confirmar presença e correção de: campo 'Valor de 1 🐝 (R$)' com debounce ~300ms aceitando vírgula (controller.digitarValor + Formatos.parseDecimal); KPIs via analiseGeral (ROI médio, Produtos com lucro, Produtos com prejuízo, 🐝 mínima sem prejuízo); lista responsiva editável via analisePorFaixa (custo até/abelinhas editáveis; venda, ROI médio, ROI no limite, 🐝 mínima p/ lucro; Pill de situação; nº de produtos); adicionar/remover faixa; quadro 'Quando dá lucro e quando dá prejuízo'.",
+    "Identificar divergências com R9.4/protótipo. Em especial: R9.4 pede o texto 'Como ler' + um exemplo REAL que se atualizam com o valor. Hoje o KpiCard.sub traz só um exemplo curto. Se faltar o bloco 'Como ler' visível, adicionar um pequeno card _ComoLer abaixo do KpiRow reutilizando analiseGeral/roiProduto (texto no padrão do protótipo: 'para cada R$ 1,00 gasto na compra, volta em média R$ X ...' + 'Exemplo: <produto> custa ... vale ... ROI ...'). Confirmar também o rótulo das faixas no formato 'R$ 5,01 a R$ 8,00' (via limiteInferior).",
+    "Aplicar SOMENTE ajustes mínimos de apresentação identificados (ou no controller se o ajuste for de estado). NÃO tocar lib/domain/calculos/abelinhas.dart. Não introduzir .last/.first em listas possivelmente vazias.",
+    "Se, após a auditoria, a tela já atende R9 e o protótipo sem ajustes, registrar isso em findings e marcar o FEAT completed sem alterações de código (apenas verificar).",
+    "Rodar flutter analyze (No issues found!) e flutter test (verde, incluindo test/domain/calculos/abelinhas_test.dart intacto). Atualizar status para completed e descrever em findings o que foi auditado e quais ajustes (se algum) foram feitos. Commit local se houve mudança (sem push)."
+  ],
+  "acceptance_criteria": [
+    "flutter analyze termina com 'No issues found!'",
+    "flutter test passa todos, incluindo os vetores de test/domain/calculos/abelinhas_test.dart sem alteração",
+    "A tela Regra de abelinhas atende R9: campo de valor com debounce/vírgula, KPIs com 'Como ler' + exemplo real que atualizam com o valor, lista de faixas editável com todas as colunas, adicionar/remover faixa e quadro de lucro/prejuízo",
+    "lib/domain/calculos/abelinhas.dart permanece inalterado"
+  ],
+  "verification": [
+    "flutter analyze",
+    "flutter test test/domain/calculos/abelinhas_test.dart",
+    "flutter test"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

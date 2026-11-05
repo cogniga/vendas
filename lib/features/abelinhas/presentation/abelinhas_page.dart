@@ -23,11 +23,15 @@ class AbelinhasPage extends ConsumerWidget {
     final dadosAsync = ref.watch(dadosAbelinhasProvider);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const PageHeader(title: 'Regra de abelinhas'),
         dadosAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Padding(
+            padding: EdgeInsets.all(Espacos.g20),
+            child: Center(child: CircularProgressIndicator()),
+          ),
           error: (e, _) => _Erro(
             mensagem: _texto(e),
             aoTentarDeNovo: () => ref.invalidate(dadosAbelinhasProvider),
