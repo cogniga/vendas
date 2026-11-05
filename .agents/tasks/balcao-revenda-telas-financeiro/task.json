@@ -1,0 +1,7 @@
+{
+  "task_id": "balcao-revenda-telas-financeiro",
+  "task_description": "Implementar as 3 telas do grupo FINANCEIRO do app Flutter Balcao Revenda seguindo fielmente o prototipo: COMPRAS DE INSUMOS (R7), INVESTIMENTO (R8) e CAIXA E SAQUES (R10). Cada tela: raiz Column(min,stretch), componentes compartilhados de core/widgets, providers em features/<feature>/application lendo empresaAtualProvider, formularios em painel lateral 560px, calculos reutilizados de domain/calculos/caixa.dart.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
