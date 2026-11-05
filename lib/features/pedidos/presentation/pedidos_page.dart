@@ -149,29 +149,44 @@ class _Conteudo extends StatelessWidget {
       return okPlat && okBusca;
     }).toList();
 
+    // Painel único (protótipo `section.panel`): surface, borda 1px line,
+    // radius 14, overflow hidden. Dentro, a toolbar no topo (padding 14x20,
+    // border-bottom 1px line) e a tabela encostada logo abaixo, sem card
+    // interno nem margem solta.
     return Container(
-      padding: const EdgeInsets.all(Espacos.g16),
       decoration: BoxDecoration(
         color: cores.surface,
         borderRadius: BorderRadius.circular(Raios.cartao),
         border: Border.all(color: cores.line),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Barra(
-            plataformas: plataformas.keys.toList(),
-            busca: busca,
-            plataformaFiltro: plataformaFiltro,
-            onBusca: onBusca,
-            onFiltro: onFiltro,
+          DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: cores.line)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Espacos.g20,
+                vertical: 14,
+              ),
+              child: _Barra(
+                plataformas: plataformas.keys.toList(),
+                busca: busca,
+                plataformaFiltro: plataformaFiltro,
+                onBusca: onBusca,
+                onFiltro: onFiltro,
+              ),
+            ),
           ),
-          const SizedBox(height: Espacos.g16),
           if (lista.isEmpty)
             _Vazio(temPedidos: pedidos.isNotEmpty)
           else
             ResponsiveList<Pedido>(
               itens: lista,
+              semMoldura: true,
               acoes: (p) => Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -180,6 +195,7 @@ class _Conteudo extends StatelessWidget {
                     tooltip: 'Abrir pedido',
                     onPressed: () => onAbrir(p),
                   ),
+                  const SizedBox(width: Espacos.g8 - 2),
                   ConfirmDeleteButton(
                     tooltip: 'Excluir pedido',
                     onConfirm: () => onExcluir(p),
@@ -248,39 +264,52 @@ class _Barra extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: Espacos.g12,
-      runSpacing: Espacos.g12,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        SizedBox(
-          width: 320,
-          child: TextField(
-            decoration: const InputDecoration(
-              hintText: 'Buscar cliente ou nº do pedido',
-              prefixIcon: Icon(LucideIcons.search, size: 18),
-              isDense: true,
-            ),
-            onChanged: onBusca,
-          ),
+    final busca = TextField(
+      decoration: const InputDecoration(
+        hintText: 'Buscar cliente ou nº do pedido',
+        prefixIcon: Icon(LucideIcons.search, size: 18),
+        isDense: true,
+      ),
+      onChanged: onBusca,
+    );
+
+    final filtro = DropdownButtonFormField<String?>(
+      initialValue: plataformaFiltro,
+      isExpanded: true,
+      decoration: const InputDecoration(isDense: true),
+      items: [
+        const DropdownMenuItem<String?>(
+          child: Text('Todas as plataformas'),
         ),
-        SizedBox(
-          width: 240,
-          child: DropdownButtonFormField<String?>(
-            initialValue: plataformaFiltro,
-            isExpanded: true,
-            decoration: const InputDecoration(isDense: true),
-            items: [
-              const DropdownMenuItem<String?>(
-                child: Text('Todas as plataformas'),
-              ),
-              for (final p in plataformas)
-                DropdownMenuItem<String?>(value: p.id, child: Text(p.nome)),
-            ],
-            onChanged: onFiltro,
-          ),
-        ),
+        for (final p in plataformas)
+          DropdownMenuItem<String?>(value: p.id, child: Text(p.nome)),
       ],
+      onChanged: onFiltro,
+    );
+
+    // Protótipo `.toolbar`: busca ocupa o espaço (`flex:1 1 220px`), filtro
+    // com largura automática (`select{width:auto}`); em telas estreitas as
+    // duas quebram em linhas (empilham).
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 480) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              busca,
+              const SizedBox(height: Espacos.g12),
+              filtro,
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: busca),
+            const SizedBox(width: Espacos.g12),
+            SizedBox(width: 240, child: filtro),
+          ],
+        );
+      },
     );
   }
 }
@@ -324,7 +353,7 @@ class _CelulaPedido extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: Espacos.base),
+        const SizedBox(height: 3),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -354,7 +383,7 @@ class _CelulaItens extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text('$n ${n == 1 ? 'item' : 'itens'}'),
-        const SizedBox(height: Espacos.base),
+        const SizedBox(height: 3),
         Text(
           Formatos.abelinhas(r.abelinhasPedido.toDouble()),
           style: textos.bodySmall,
@@ -379,7 +408,7 @@ class _CelulaVenda extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(Formatos.moedaDecimal(pedido.precoVenda)),
-        const SizedBox(height: Espacos.base),
+        const SizedBox(height: 3),
         Text(
           'taxa ${Formatos.moedaDecimal(r.taxaEfetiva)}',
           style: textos.bodySmall,
@@ -414,7 +443,7 @@ class _CelulaLiquido extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: Espacos.base),
+        const SizedBox(height: 3),
         Text(
           'custo ${Formatos.moedaDecimal(r.custo)}',
           style: textos.bodySmall,
@@ -447,7 +476,7 @@ class _CelulaLucro extends StatelessWidget {
             color: negativo ? cores.bad : cores.good,
           ),
         ),
-        const SizedBox(height: Espacos.base),
+        const SizedBox(height: 3),
         Text(
           '${Formatos.percentualFracao(r.margem.toDouble())} da venda',
           style: textos.bodySmall,
@@ -500,13 +529,18 @@ class _Vazio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cores = context.cores;
+    // Protótipo `.empty{padding:32px 16px;text-align:center;color:muted}`.
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: Espacos.g20),
+      padding: const EdgeInsets.symmetric(
+        vertical: 32,
+        horizontal: Espacos.g16,
+      ),
       child: Center(
         child: Text(
           temPedidos
               ? 'Nenhum pedido encontrado com esse filtro.'
               : 'Nenhum pedido. Use "Novo pedido" para lançar o primeiro.',
+          textAlign: TextAlign.center,
           style: TextStyle(color: cores.muted),
         ),
       ),

@@ -137,13 +137,26 @@ class _Corpo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Protótipo `main{padding-block:32px 64px; padding-inline:max(16,min(4vw,
+    // 44))}` e, em telas estreitas, `padding-block:20px 60px; inline:16`.
+    // O conteúdo começa SEMPRE no topo (SingleChildScrollView alinha ao topo);
+    // o padding só controla o respiro, nunca centraliza verticalmente.
     return LayoutBuilder(
       builder: (context, constraints) {
-        final padding = constraints.maxWidth < 600
-            ? Espacos.paddingPainelCelular
-            : Espacos.paddingPainel;
+        final largura = constraints.maxWidth;
+        final estreito = largura < 760;
+        final padLateral = estreito
+            ? Espacos.g16
+            : (largura * 0.04).clamp(Espacos.g16, 44).toDouble();
+        final padTopo = estreito ? Espacos.g20 : 32.0;
+        final padBase = estreito ? 60.0 : 64.0;
         return SingleChildScrollView(
-          padding: EdgeInsets.all(padding),
+          padding: EdgeInsets.fromLTRB(
+            padLateral,
+            padTopo,
+            padLateral,
+            padBase,
+          ),
           child: child,
         );
       },

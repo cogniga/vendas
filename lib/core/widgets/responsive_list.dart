@@ -32,6 +32,7 @@ class ResponsiveList<T> extends StatelessWidget {
     required this.colunas,
     this.acoes,
     this.limiarCartao = 780,
+    this.semMoldura = false,
     super.key,
   });
 
@@ -43,6 +44,12 @@ class ResponsiveList<T> extends StatelessWidget {
 
   /// Largura mínima (do widget) para usar o modo tabela.
   final double limiarCartao;
+
+  /// Quando `true`, a tabela não desenha o próprio cartão (borda, fundo,
+  /// radius): é usada dentro de um painel externo, encostada à toolbar, sem
+  /// borda dupla. O protótipo (`.panel > .toolbar + table.ptable`) usa esse
+  /// layout em Pedidos. As demais telas mantêm o padrão (`false`).
+  final bool semMoldura;
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +71,14 @@ class _Tabela<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final cores = context.cores;
     final textos = Theme.of(context).textTheme;
+    final semMoldura = lista.semMoldura;
+
+    // Padding das células: protótipo `th 10x14` / `td 11x14`.
+    // No modo com moldura mantém o espaçamento mais folgado já em uso nas
+    // demais telas (16/12) para não alterar seu layout.
+    final padH = semMoldura ? Espacos.g12 + 2 : Espacos.g16; // 14 : 16
+    final padVCabecalho = semMoldura ? 10.0 : Espacos.g12;
+    final padVCelula = semMoldura ? 11.0 : Espacos.g12;
 
     Widget celula(ColunaLista<T> c, Widget filho) {
       return Expanded(
@@ -74,6 +89,58 @@ class _Tabela<T> extends StatelessWidget {
       );
     }
 
+    final conteudo = Column(
+      children: [
+        Container(
+          color: cores.surface2,
+          padding: EdgeInsets.symmetric(
+            horizontal: padH,
+            vertical: padVCabecalho,
+          ),
+          child: Row(
+            children: [
+              for (final c in lista.colunas)
+                celula(
+                  c,
+                  Text(c.label, style: textos.labelLarge),
+                ),
+              if (lista.acoes != null)
+                const SizedBox(width: 120, child: SizedBox.shrink()),
+            ],
+          ),
+        ),
+        for (var i = 0; i < lista.itens.length; i++) ...[
+          if (i > 0) Divider(height: 1, color: cores.line),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: padH,
+              vertical: padVCelula,
+            ),
+            child: Row(
+              children: [
+                for (final c in lista.colunas)
+                  celula(c, c.builder(lista.itens[i])),
+                if (lista.acoes != null)
+                  SizedBox(
+                    width: 120,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: lista.acoes!(lista.itens[i]),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+
+    if (semMoldura) return conteudo;
+
     return Container(
       decoration: BoxDecoration(
         color: cores.surface,
@@ -81,51 +148,7 @@ class _Tabela<T> extends StatelessWidget {
         border: Border.all(color: cores.line),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Container(
-            color: cores.surface2,
-            padding: const EdgeInsets.symmetric(
-              horizontal: Espacos.g16,
-              vertical: Espacos.g12,
-            ),
-            child: Row(
-              children: [
-                for (final c in lista.colunas)
-                  celula(
-                    c,
-                    Text(c.label, style: textos.labelLarge),
-                  ),
-                if (lista.acoes != null)
-                  const SizedBox(width: 96, child: SizedBox.shrink()),
-              ],
-            ),
-          ),
-          for (var i = 0; i < lista.itens.length; i++) ...[
-            if (i > 0) Divider(height: 1, color: cores.line),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Espacos.g16,
-                vertical: Espacos.g12,
-              ),
-              child: Row(
-                children: [
-                  for (final c in lista.colunas)
-                    celula(c, c.builder(lista.itens[i])),
-                  if (lista.acoes != null)
-                    SizedBox(
-                      width: 96,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: lista.acoes!(lista.itens[i]),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
+      child: conteudo,
     );
   }
 }

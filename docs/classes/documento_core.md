@@ -56,7 +56,10 @@
 - **Arquivo:** `lib/core/widgets/page_header.dart`
 - **Responsabilidade:** cabeçalho de página `PageHeader(title, subtitle?, actions)`.
   Título grande (headlineMedium), subtítulo opcional e ações à direita; em telas
-  estreitas as ações descem de linha (usa `Wrap`).
+  estreitas as ações descem de linha. Reproduz o `.head` do protótipo:
+  `margin-bottom:24`, em tela larga título à esquerda e ações à direita na mesma
+  linha alinhadas pela base (`align-items:flex-end`); subtítulo `margin-top:6`,
+  cor muted, `max-width ~64ch` (≈512px).
 
 ## documento_KpiCard
 - **Arquivo:** `lib/core/widgets/kpi_card.dart`
@@ -94,14 +97,17 @@
 ## documento_IconAction
 - **Arquivo:** `lib/core/widgets/icon_action.dart`
 - **Responsabilidade:** `IconAction(icon, tooltip, onPressed, danger=false)` —
-  botão só com ícone, sempre com `Tooltip` e `Semantics(label: tooltip)`
-  (acessibilidade obrigatória). `danger` usa a cor `bad`.
+  botão só com ícone no visual `.iconbtn` do protótipo (quadrado 34x34, borda
+  1px line, radius 8, fundo surface, ícone muted; hover → surface-2). Sempre com
+  `Tooltip` e `Semantics(label: tooltip)` (acessibilidade obrigatória). `danger`
+  pinta o ícone com `bad` e usa hover `bad-soft`.
 
 ## documento_ConfirmDeleteButton
 - **Arquivo:** `lib/core/widgets/confirm_delete_button.dart`
-- **Responsabilidade:** exclusão em duas etapas. 1º clique troca para
-  "Confirmar" (vermelho) por 3s via `Timer`; 2º clique chama `onConfirm`.
-  Acessível (`Tooltip`+`Semantics`).
+- **Responsabilidade:** exclusão em duas etapas. Estado normal no visual
+  `.iconbtn danger` (34x34, borda 1px line, radius 8, ícone `bad`, hover
+  `bad-soft`). 1º clique troca para "Confirmar" (vermelho) por 3s via `Timer`;
+  2º clique chama `onConfirm`. Acessível (`Tooltip`+`Semantics`).
 
 ## documento_Ledger
 - **Arquivo:** `lib/core/widgets/ledger.dart`
@@ -127,9 +133,13 @@
 ## documento_ResponsiveList
 - **Arquivo:** `lib/core/widgets/responsive_list.dart`
 - **Responsabilidade:** `ResponsiveList<T>(itens, colunas, acoes?,
-  limiarCartao=780)` — decide por `LayoutBuilder` (largura do próprio widget):
-  acima do limiar renderiza tabela (cabeçalho surface2, ações à direita), abaixo
-  cartões (título=coluna principal, grade 4/2 colunas). Sem rolagem horizontal.
+  limiarCartao=780, semMoldura=false)` — decide por `LayoutBuilder` (largura do
+  próprio widget): acima do limiar renderiza tabela (cabeçalho surface2, ações à
+  direita), abaixo cartões (título=coluna principal, grade 4/2 colunas). Sem
+  rolagem horizontal. Quando `semMoldura=true` a tabela NÃO desenha o próprio
+  cartão (borda/fundo/radius) e usa os paddings do protótipo (th 10/14, td
+  11/14), para ser usada dentro de um painel externo encostada à toolbar (sem
+  borda dupla) — é o caso de Pedidos; as demais telas usam o default `false`.
 
 ## documento_AppShell
 - **Arquivo:** `lib/core/widgets/app_shell.dart`
@@ -138,7 +148,11 @@
   (760–1099); `<760` usa `Scaffold` com `AppBar` (botão ☰) + `Drawer`. Grupos
   Painel/Operação/Financeiro/Configuração, item ativo em accentSoft/accent com
   barra lateral; rodapé com seletor de tema (lê/escreve `temaProvider`).
-  Navega com `context.go`. Decisão de largura central (`LayoutBuilder`).
+  Navega com `context.go`. Decisão de largura central (`LayoutBuilder`). O
+  conteúdo (`_Corpo`) rola em `SingleChildScrollView` alinhado ao TOPO, com
+  padding do protótipo `main`: topo 32 / base 64 e laterais responsivas
+  (`4vw`, 16–44) em tela larga; topo 20 / base 60 e laterais 16 no celular.
+  Nunca centraliza o conteúdo verticalmente.
 
 ## documento_Rotas
 - **Arquivo:** `lib/core/router/rotas.dart`

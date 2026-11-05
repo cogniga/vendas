@@ -22,18 +22,32 @@ class IconAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cores = context.cores;
-    final cor = danger ? cores.bad : cores.muted;
+    // Visual `.iconbtn` do protótipo: quadrado 34x34, borda 1px line,
+    // radius 8, fundo surface, cor do ícone muted; hover → surface-2
+    // (e, quando danger, hover → fundo bad-soft, cor bad).
+    final corIcone = danger ? cores.bad : cores.muted;
 
     return Semantics(
       label: tooltip,
       button: true,
       child: Tooltip(
         message: tooltip,
-        child: IconButton(
-          icon: Icon(icon, size: 18, color: cor),
-          onPressed: onPressed,
-          splashRadius: 20,
-          visualDensity: VisualDensity.compact,
+        child: SizedBox(
+          width: 34,
+          height: 34,
+          child: Material(
+            color: cores.surface,
+            shape: RoundedRectangleBorder(
+              side: BorderSide(color: cores.line),
+              borderRadius: BorderRadius.circular(Raios.controle),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onPressed,
+              hoverColor: danger ? cores.badSoft : cores.surface2,
+              child: Center(child: Icon(icon, size: 18, color: corIcone)),
+            ),
+          ),
         ),
       ),
     );

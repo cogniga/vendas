@@ -51,16 +51,31 @@ class _ConfirmDeleteButtonState extends State<ConfirmDeleteButton> {
     final cores = context.cores;
 
     if (!_confirmando) {
+      // Estado normal: `.iconbtn danger` do protótipo (34x34, borda 1px line,
+      // radius 8, ícone na cor de erro; hover → fundo bad-soft).
       return Semantics(
         label: widget.tooltip,
         button: true,
         child: Tooltip(
           message: widget.tooltip,
-          child: IconButton(
-            icon: Icon(LucideIcons.trash2, size: 18, color: cores.bad),
-            onPressed: _aoClicar,
-            splashRadius: 20,
-            visualDensity: VisualDensity.compact,
+          child: SizedBox(
+            width: 34,
+            height: 34,
+            child: Material(
+              color: cores.surface,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(color: cores.line),
+                borderRadius: BorderRadius.circular(Raios.controle),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: _aoClicar,
+                hoverColor: cores.badSoft,
+                child: Center(
+                  child: Icon(LucideIcons.trash2, size: 18, color: cores.bad),
+                ),
+              ),
+            ),
           ),
         ),
       );
