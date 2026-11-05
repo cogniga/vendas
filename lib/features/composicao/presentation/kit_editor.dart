@@ -5,6 +5,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:sales/core/format/formatos.dart';
 import 'package:sales/core/format/padrao_escrita.dart';
 import 'package:sales/core/theme/tokens.dart';
+import 'package:sales/core/widgets/botao_pequeno.dart';
+import 'package:sales/core/widgets/code_chip.dart';
+import 'package:sales/core/widgets/ledger.dart';
 import 'package:sales/core/widgets/painel_lateral.dart';
 import 'package:sales/core/widgets/pill.dart';
 import 'package:sales/core/widgets/platform_pill.dart';
@@ -250,16 +253,33 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
   // ---------------------------------------------------------------- esquerda
 
   Widget _colunaEsquerda(DadosEdicaoKit dados) {
+    final cores = context.cores;
+    final textos = Theme.of(context).textTheme;
+    final unidades = _itens.fold<int>(0, (s, i) => s + i.quantidade);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _painel('Itens do produto de venda', _listaItens(dados)),
+        _painel(
+          'Itens do produto de venda',
+          _listaItens(dados),
+          acao: _itens.isEmpty
+              ? null
+              : Text(
+                  '$unidades ${unidades == 1 ? 'unidade' : 'unidades'}',
+                  style: textos.bodySmall?.copyWith(color: cores.muted),
+                ),
+        ),
         const SizedBox(height: Espacos.g16),
         _painel('Adicionar itens', _picker(dados)),
         const SizedBox(height: Espacos.g16),
         _painel('Custos adicionais', _custosAdicionais(dados)),
         const SizedBox(height: Espacos.g16),
-        _painel('Preço base e metas', _precoEMetas()),
+        _painel(
+          'Preço base e metas',
+          _precoEMetas(),
+          dica: 'Vale para todas as plataformas, a menos que você mude '
+              'abaixo.',
+        ),
       ],
     );
   }
@@ -274,18 +294,10 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
         ),
       );
     }
-    final textos = Theme.of(context).textTheme;
-    final unidades = _itens.fold<int>(0, (s, i) => s + i.quantidade);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          '$unidades ${unidades == 1 ? 'unidade' : 'unidades'}',
-          style: textos.bodySmall,
-        ),
-        const SizedBox(height: Espacos.g8),
-        for (var i = 0; i < _itens.length; i++)
-          _linhaItem(dados, i),
+        for (var i = 0; i < _itens.length; i++) _linhaItem(dados, i),
       ],
     );
   }
@@ -308,7 +320,16 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('${produto?.codigo ?? '?'} · $nome'),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CodeChip(produto?.codigo ?? '?'),
+                    const SizedBox(width: Espacos.g8),
+                    Flexible(
+                      child: Text(nome, overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
+                ),
                 Text(
                   '${Formatos.moedaDecimal(custo)} · '
                   '${Formatos.abelinhas(abUn.toDouble())} cada · '
@@ -368,6 +389,8 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
         )
         .take(12)
         .toList();
+    final cores = context.cores;
+    final textos = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -380,21 +403,57 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
           ),
           onChanged: (v) => setState(() => _busca = v),
         ),
-        const SizedBox(height: Espacos.g8),
+        const SizedBox(height: Espacos.g12),
         if (produtos.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: Espacos.g8),
             child: Text('Nada encontrado.'),
           )
         else
-          for (final p in produtos)
-            ListTile(
-              dense: true,
-              leading: Text(p.codigo),
-              title: Text(p.nome),
-              subtitle: Text(Formatos.moedaDecimal(p.custo)),
-              trailing: const Icon(LucideIcons.plus, size: 16),
-              onTap: () => _adicionar(p.id),
+          // Linhas `.pick`: código + nome truncado + custo em negrito +
+          // botão `.btn.sm` "Adicionar", separadas por `border-top`.
+          for (var i = 0; i < produtos.length; i++)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: i == 0
+                    ? null
+                    : Border(top: BorderSide(color: cores.line)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 9),
+                child: Row(
+                  children: [
+                    CodeChip(produtos[i].codigo),
+                    const SizedBox(width: Espacos.g8 + 2),
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(text: produtos[i].nome),
+                            TextSpan(
+                              text: '  ${produtos[i].marca}',
+                              style: TextStyle(color: cores.muted),
+                            ),
+                          ],
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: Espacos.g8 + 2),
+                    Text(
+                      Formatos.moedaDecimal(produtos[i].custo),
+                      style: textos.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: Espacos.g8 + 2),
+                    BotaoPequeno(
+                      rotulo: 'Adicionar',
+                      onPressed: () => _adicionar(produtos[i].id),
+                    ),
+                  ],
+                ),
+              ),
             ),
       ],
     );
@@ -591,83 +650,80 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
       }
     }
 
-    Widget linha(String rotulo, String valorTexto, {bool forte = false}) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                rotulo,
-                style: forte
-                    ? textos.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600)
-                    : textos.bodySmall,
-              ),
-            ),
-            Text(
-              valorTexto,
-              style: forte
-                  ? textos.bodyMedium?.copyWith(fontWeight: FontWeight.w600)
-                  : textos.bodyMedium,
-            ),
-          ],
-        ),
-      );
-    }
-
     return Container(
-      padding: const EdgeInsets.all(Espacos.g16),
       decoration: BoxDecoration(
         color: cores.surface,
         borderRadius: BorderRadius.circular(Raios.cartao),
         border: Border.all(color: cores.line),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('Custo do produto de venda', style: textos.labelLarge),
-          linha('Compra dos itens', Formatos.moedaDecimal(compra)),
-          linha('Embalagem', Formatos.moedaDecimal(_embalagem)),
-          linha('Impressão', Formatos.moedaDecimal(_impressao)),
-          linha('Outros insumos', Formatos.moedaDecimal(_outros)),
-          linha(
-            'Investimento por venda',
-            Formatos.moedaDecimal(investimento),
-            forte: true,
-          ),
-          const SizedBox(height: Espacos.g12),
-          Text('Abelinhas do kit', style: textos.labelLarge),
-          linha(
-            'Total de abelinhas',
-            Formatos.abelinhas(abelinhas.toDouble()),
-            forte: true,
-          ),
-          linha(
-            'Valem com 1 🐝 = ${Formatos.moedaDecimal(valor)}',
-            Formatos.moedaDecimal(abelinhas * valor),
-          ),
-          const SizedBox(height: Espacos.g12),
-          Text('Lucro por plataforma', style: textos.labelLarge),
-          for (final e in resultados.entries)
-            _linhaLucro(e.key, e.value),
-          if (melhor != null && investimento > Decimal.zero) ...[
-            const SizedBox(height: Espacos.g12),
-            Container(
-              padding: const EdgeInsets.all(Espacos.g12),
-              decoration: BoxDecoration(
-                color: cores.accentSoft,
-                borderRadius: BorderRadius.circular(Raios.controle),
-              ),
-              child: Text(
-                'Melhor resultado: ${melhor.nome}, com '
-                '${Formatos.moedaDecimal(resultados[melhor]!.lucro)} '
-                'por venda.',
-                style: textos.bodySmall,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(Espacos.g20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Custo do produto de venda', style: textos.titleMedium),
+            const SizedBox(height: Espacos.base),
+            Ledger(
+              linhas: [
+                LinhaLedger(
+                  'Compra dos itens',
+                  Formatos.moedaDecimal(compra),
+                ),
+                LinhaLedger('Embalagem', Formatos.moedaDecimal(_embalagem)),
+                LinhaLedger('Impressão', Formatos.moedaDecimal(_impressao)),
+                LinhaLedger(
+                  'Outros insumos',
+                  Formatos.moedaDecimal(_outros),
+                ),
+              ],
+              total: LinhaLedger(
+                'Investimento por venda',
+                Formatos.moedaDecimal(investimento),
               ),
             ),
+            const SizedBox(height: Espacos.g8),
+            Text(
+              'Esse custo é igual em todas as plataformas. O que muda é a '
+              'taxa de cada uma.',
+              style: textos.bodySmall?.copyWith(color: cores.muted),
+            ),
+            const SizedBox(height: Espacos.g16),
+            Ledger(
+              linhas: [
+                LinhaLedger(
+                  'Abelinhas do kit',
+                  Formatos.abelinhas(abelinhas.toDouble()),
+                  destaque: true,
+                ),
+                LinhaLedger(
+                  'Valem com 1 🐝 = ${Formatos.moedaDecimal(valor)}',
+                  Formatos.moedaDecimal(abelinhas * valor),
+                ),
+              ],
+            ),
+            const SizedBox(height: Espacos.g16),
+            Text('Lucro por plataforma', style: textos.titleMedium),
+            const SizedBox(height: Espacos.base),
+            for (final e in resultados.entries) _linhaLucro(e.key, e.value),
+            if (melhor != null && investimento > Decimal.zero) ...[
+              const SizedBox(height: Espacos.g12),
+              Container(
+                padding: const EdgeInsets.all(Espacos.g12),
+                decoration: BoxDecoration(
+                  color: cores.accentSoft,
+                  borderRadius: BorderRadius.circular(Raios.controle),
+                ),
+                child: Text(
+                  'Melhor resultado: ${melhor.nome}, com '
+                  '${Formatos.moedaDecimal(resultados[melhor]!.lucro)} '
+                  'por venda.',
+                  style: textos.bodySmall?.copyWith(color: cores.accent),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -715,50 +771,61 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
     final textos = Theme.of(context).textTheme;
     final kit = _montarKit();
 
+    // Cabeçalho `th`: 12px muted w500, fundo surface-2, padding 10x14.
+    final estiloCab = textos.bodySmall?.copyWith(
+      color: cores.muted,
+      fontWeight: FontWeight.w500,
+    );
+
     Widget cab(String t) => Expanded(
-          child: Text(
-            t,
-            style: textos.labelLarge,
-            textAlign: TextAlign.right,
-          ),
+          child: Text(t, style: estiloCab, textAlign: TextAlign.right),
         );
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: Espacos.g8),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Text('Plataforma', style: textos.labelLarge),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text('Preço anúncio', style: textos.labelLarge),
-              ),
-              cab('Cliente paga'),
-              cab('Taxa'),
-              cab('Líquido'),
-              cab('Lucro'),
-              cab('Margem'),
-              cab('ROI'),
-              cab('Mínimo'),
-              cab('Sugerido'),
-              cab('Meta'),
-              cab('ROAS'),
-            ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(Raios.controle),
+      child: Column(
+        children: [
+          Container(
+            color: cores.surface2,
+            padding: const EdgeInsets.symmetric(
+              horizontal: Espacos.g12 + 2,
+              vertical: 10,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Text('Plataforma', style: estiloCab),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text('Preço anúncio', style: estiloCab),
+                ),
+                cab('Cliente paga'),
+                cab('Taxa'),
+                cab('Líquido'),
+                cab('Lucro'),
+                cab('Margem'),
+                cab('ROI'),
+                cab('Preço mínimo'),
+                cab('Sugerido'),
+                cab('Meta'),
+                cab('ROAS alvo'),
+              ],
+            ),
           ),
-        ),
-        Divider(height: 1, color: cores.line),
-        for (final e in dados.plataformas.entries) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: Espacos.g8),
-            child: _linhaTabela(dados, kit, e.key, e.value),
-          ),
-          Divider(height: 1, color: cores.line),
+          for (final e in dados.plataformas.entries) ...[
+            Divider(height: 1, color: cores.line),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Espacos.g12 + 2,
+                vertical: 11,
+              ),
+              child: _linhaTabela(dados, kit, e.key, e.value),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -936,13 +1003,11 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
     }
     return Align(
       alignment: Alignment.centerRight,
-      child: TextButton(
+      child: BotaoPequeno(
+        rotulo: Formatos.moedaDecimal(sugerido),
+        tooltip: 'Preço para '
+            '${Formatos.numero(_margemAlvo.toDouble())}% de margem',
         onPressed: () => _usarSugerido(platId, sugerido),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: Espacos.g8),
-          visualDensity: VisualDensity.compact,
-        ),
-        child: Text(Formatos.moedaDecimal(sugerido)),
       ),
     );
   }
@@ -965,30 +1030,47 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
 
   // ------------------------------------------------------------------ helpers
 
-  Widget _painel(String titulo, Widget corpo, {String? dica}) {
+  /// Painel do protótipo `.panel`: cabeçalho (`16x20`, título 15/600 +
+  /// `.hint` opcional à direita) separado por `border-bottom` do corpo
+  /// (`padding 20`). Sem card dentro de card.
+  Widget _painel(String titulo, Widget corpo, {String? dica, Widget? acao}) {
     final cores = context.cores;
     final textos = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.all(Espacos.g16),
       decoration: BoxDecoration(
         color: cores.surface,
         borderRadius: BorderRadius.circular(Raios.cartao),
         border: Border.all(color: cores.line),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(titulo, style: textos.titleMedium),
-          if (dica != null)
-            Padding(
-              padding: const EdgeInsets.only(top: Espacos.base),
-              child: Text(
-                dica,
-                style: textos.bodySmall?.copyWith(color: cores.muted),
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: Espacos.g20,
+              vertical: Espacos.g16,
             ),
-          const SizedBox(height: Espacos.g8),
-          corpo,
+            child: Row(
+              children: [
+                Expanded(child: Text(titulo, style: textos.titleMedium)),
+                if (acao != null) acao,
+                if (dica != null)
+                  Flexible(
+                    child: Text(
+                      dica,
+                      textAlign: TextAlign.right,
+                      style: textos.bodySmall?.copyWith(color: cores.muted),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: cores.line),
+          Padding(
+            padding: const EdgeInsets.all(Espacos.g20),
+            child: corpo,
+          ),
         ],
       ),
     );

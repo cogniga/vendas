@@ -68,6 +68,7 @@ class _ComposicaoPageState extends ConsumerState<ComposicaoPage> {
     final faixasAsync = ref.watch(faixasAbelinhaProvider);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         PageHeader(
@@ -143,21 +144,25 @@ class _Conteudo extends StatelessWidget {
   Widget build(BuildContext context) {
     final cores = context.cores;
 
+    // Painel único (protótipo `section.panel`): surface, borda 1px line,
+    // radius 14, overflow hidden. Dentro, a tabela encostada ao topo e a hint
+    // num rodapé com `border-top`, sem card interno nem margem solta.
     return Container(
-      padding: const EdgeInsets.all(Espacos.g16),
       decoration: BoxDecoration(
         color: cores.surface,
         borderRadius: BorderRadius.circular(Raios.cartao),
         border: Border.all(color: cores.line),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (kits.isEmpty)
             const _Vazio()
-          else
+          else ...[
             ResponsiveList<ProdutoVenda>(
               itens: kits,
+              semMoldura: true,
               limiarCartao: 990,
               acoes: (k) => Row(
                 mainAxisSize: MainAxisSize.min,
@@ -167,11 +172,13 @@ class _Conteudo extends StatelessWidget {
                     tooltip: 'Abrir produto de venda',
                     onPressed: () => onAbrir(k),
                   ),
+                  const SizedBox(width: Espacos.g8 - 2),
                   IconAction(
                     icon: LucideIcons.copy,
                     tooltip: 'Duplicar',
                     onPressed: () => onDuplicar(k),
                   ),
+                  const SizedBox(width: Espacos.g8 - 2),
                   ConfirmDeleteButton(
                     tooltip: 'Excluir produto de venda',
                     onConfirm: () => onExcluir(k),
@@ -210,15 +217,28 @@ class _Conteudo extends StatelessWidget {
                   ),
               ],
             ),
-          const SizedBox(height: Espacos.g12),
-          Text(
-            'Em cada plataforma: lucro por venda, e abaixo o valor que o '
-            'cliente paga e a margem.',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: cores.muted),
-          ),
+            // Rodapé do painel (protótipo `.toolbar` com `border-top`):
+            // faixa encostada à tabela, padding 14x20, hint 12px muted.
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: cores.line)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Espacos.g20,
+                  vertical: 14,
+                ),
+                child: Text(
+                  'Em cada plataforma: lucro por venda, e abaixo o valor que '
+                  'o cliente paga e a margem.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: cores.muted),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -388,12 +408,17 @@ class _Vazio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cores = context.cores;
+    // Protótipo `.empty{padding:32px 16px;text-align:center;color:muted}`.
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: Espacos.g20),
+      padding: const EdgeInsets.symmetric(
+        vertical: 32,
+        horizontal: Espacos.g16,
+      ),
       child: Center(
         child: Text(
           'Nenhum produto de venda ainda. Use "Novo produto de venda" '
           'para criar o primeiro.',
+          textAlign: TextAlign.center,
           style: TextStyle(color: cores.muted),
         ),
       ),

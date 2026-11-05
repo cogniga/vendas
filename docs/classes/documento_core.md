@@ -114,6 +114,13 @@
 - **Responsabilidade:** `Ledger(linhas, total?)` com `LinhaLedger(rotulo, valor,
   destaque?)` — bloco chave/valor com total destacado (cor accent).
 
+## documento_BotaoPequeno
+- **Arquivo:** `lib/core/widgets/botao_pequeno.dart`
+- **Responsabilidade:** `BotaoPequeno(rotulo, onPressed, tooltip?)` — botão
+  compacto no visual `.btn.sm` do protótipo (padding 5x10, texto 12,5/500 ink,
+  borda 1px line, fundo surface, radius 8, hover → surface-2). Usado no
+  "Sugerido" e no "Adicionar" do editor de kit.
+
 ## documento_MoneyField
 - **Arquivo:** `lib/core/widgets/money_field.dart`
 - **Responsabilidade:** `MoneyField(onChanged<Decimal?>)` — campo monetário que
