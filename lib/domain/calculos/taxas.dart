@@ -27,7 +27,28 @@ FaixaTaxa _faixaNeutra() => FaixaTaxa(
       taxaPercentual: zero,
     );
 
-/// Faixa aplicável a [preco]: a primeira cujo limite cobre o preço
+/// Início ("De") de cada faixa, na mesma ordem de [tetos] (o "até" de cada
+/// faixa; `null` = sem limite).
+///
+/// O início é o maior teto menor que o da faixa + R$ 0,01 (0 na primeira).
+/// Para a faixa sem limite, é o maior teto existente + 0,01. Assim as faixas
+/// nunca têm buraco nem sobreposição, sem precisar guardar o mínimo no banco.
+List<Decimal> iniciosDasFaixas(List<Decimal?> tetos) {
+  final centavo = Decimal.parse('0.01');
+  final finitos = tetos.whereType<Decimal>().toList();
+  return [
+    for (final teto in tetos)
+      () {
+        final anteriores =
+            finitos.where((t) => teto == null || t < teto).toList();
+        if (anteriores.isEmpty) return Decimal.zero;
+        return anteriores.reduce((a, b) => a > b ? a : b) + centavo;
+      }(),
+  ];
+}
+
+/// Faixa aplicável a [preco] (ex.: até 50 · 50,01 a 100 · acima de 100).
+/// É a primeira cujo limite cobre o preço
 /// (`precoAte == null || preco <= precoAte`); se nenhuma cobrir, a última.
 ///
 /// Quando [faixas] está vazia (plataforma sem faixas ou dados ainda não

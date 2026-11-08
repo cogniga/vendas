@@ -8,6 +8,7 @@ import 'package:sales/core/widgets/money_field.dart';
 import 'package:sales/core/widgets/painel_lateral.dart';
 import 'package:sales/core/widgets/text_case_field.dart';
 import 'package:sales/data/repositorios/compra_insumo_repository.dart';
+import 'package:sales/data/repositorios/padrao_nome_provider.dart';
 import 'package:sales/domain/calculos/decimais.dart';
 import 'package:sales/domain/entidades/compra_insumo.dart';
 import 'package:sales/domain/entidades/destino.dart';
@@ -110,7 +111,7 @@ class _CompraFormState extends ConsumerState<_CompraForm> {
       id: atual?.id ?? '',
       empresaId: widget.empresaId,
       data: _data,
-      produto: PadraoEscrita.titulo(_produto.text),
+      produto: PadraoEscrita.nome(_produto.text, ref.read(padraoNomeProvider)),
       descricao: PadraoEscrita.frase(_descricao.text),
       tipo: _tipo,
       valorTotal: _valorTotal ?? Decimal.zero,
@@ -166,7 +167,8 @@ class _CompraFormState extends ConsumerState<_CompraForm> {
           ),
           const SizedBox(height: Espacos.g12),
           TextCaseField(
-            caso: CasoTexto.titulo,
+            caso: CasoTexto.nome,
+            padraoNome: ref.watch(padraoNomeProvider),
             controller: _produto,
             label: 'Produto',
           ),

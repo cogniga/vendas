@@ -18,6 +18,7 @@ _$ConfiguracoesImpl _$$ConfiguracoesImplFromJson(Map<String, dynamic> json) =>
       valorAbelinha: const DecimalConverter().fromJson(
         json['valor_abelinha'] as Object,
       ),
+      padraoNome: json['padrao_nome'] as String? ?? 'titulo',
     );
 
 Map<String, dynamic> _$$ConfiguracoesImplToJson(
@@ -27,4 +28,5 @@ Map<String, dynamic> _$$ConfiguracoesImplToJson(
   'embalagem_padrao': const DecimalConverter().toJson(instance.embalagemPadrao),
   'impressao_padrao': const DecimalConverter().toJson(instance.impressaoPadrao),
   'valor_abelinha': const DecimalConverter().toJson(instance.valorAbelinha),
+  'padrao_nome': instance.padraoNome,
 };

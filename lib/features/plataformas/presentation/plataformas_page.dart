@@ -374,6 +374,8 @@ class _Faixas extends StatelessWidget {
     final cores = context.cores;
     final textos = Theme.of(context).textTheme;
     final podeRemover = faixas.length > 1;
+    final inicios = iniciosDasFaixas([for (final f in faixas) f.precoAte]);
+    final abertas = faixas.where((f) => f.precoAte == null).length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -383,16 +385,25 @@ class _Faixas extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                r'Preço até (R$)',
+                r'De (R$)',
                 style: textos.bodySmall?.copyWith(color: cores.muted),
               ),
             ),
+            const SizedBox(width: Espacos.g8),
+            Expanded(
+              child: Text(
+                r'Até (R$)',
+                style: textos.bodySmall?.copyWith(color: cores.muted),
+              ),
+            ),
+            const SizedBox(width: Espacos.g8),
             Expanded(
               child: Text(
                 r'Fixo (R$)',
                 style: textos.bodySmall?.copyWith(color: cores.muted),
               ),
             ),
+            const SizedBox(width: Espacos.g8),
             Expanded(
               child: Text(
                 'Percentual',
@@ -409,11 +420,18 @@ class _Faixas extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
+                  child: _InicioFaixa(
+                    key: ValueKey('de-$plataformaId-$i'),
+                    valor: inicios[i],
+                  ),
+                ),
+                const SizedBox(width: Espacos.g8),
+                Expanded(
                   child: _CampoDecimal(
                     key: ValueKey('ate-$plataformaId-$i'),
                     valor: faixas[i].precoAte,
                     aceitaVazio: true,
-                    dica: 'sem limite',
+                    dica: 'e acima',
                     aoMudar: (v) => notifier.alterarFaixa(
                       plataformaId,
                       i,
@@ -458,6 +476,19 @@ class _Faixas extends StatelessWidget {
               ],
             ),
           ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: Espacos.g8),
+          child: Text(
+            abertas > 1
+                ? 'Só uma faixa pode ficar com "Até" vazio (e acima). '
+                    'Preencha o teto das outras.'
+                : 'Deixe "Até" vazio na última faixa para valer de '
+                    'aquele valor em diante.',
+            style: textos.bodySmall?.copyWith(
+              color: abertas > 1 ? cores.bad : cores.muted,
+            ),
+          ),
+        ),
         Align(
           alignment: Alignment.centerLeft,
           child: OutlinedButton.icon(
@@ -666,6 +697,29 @@ class _CampoTextoState extends State<_CampoTexto> {
         isDense: true,
       ),
       onChanged: widget.aoMudar,
+    );
+  }
+}
+
+/// Início da faixa ("De"), calculado a partir do teto da faixa anterior.
+/// Somente leitura, com o mesmo formato visual de um campo desabilitado.
+class _InicioFaixa extends StatelessWidget {
+  const _InicioFaixa({required this.valor, super.key});
+
+  final Decimal valor;
+
+  @override
+  Widget build(BuildContext context) {
+    final texto = Formatos.numero(valor.toDouble());
+    return Semantics(
+      label: 'Início da faixa: ${Formatos.moedaDecimal(valor)}',
+      child: Tooltip(
+        message: r'Calculado: teto da faixa anterior + R$ 0,01',
+        child: InputDecorator(
+          decoration: const InputDecoration(isDense: true, enabled: false),
+          child: Text(texto),
+        ),
+      ),
     );
   }
 }

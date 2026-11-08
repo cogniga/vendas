@@ -8,6 +8,7 @@ class ColunaLista<T> {
     required this.builder,
     this.alinhamento,
     this.principal = false,
+    this.cabecalho,
   });
 
   /// Rótulo do cabeçalho (tabela) e rótulo do par rótulo/valor (cartão).
@@ -21,6 +22,10 @@ class ColunaLista<T> {
 
   /// Coluna principal: vira o título do cartão em modo estreito.
   final bool principal;
+
+  /// Cabeçalho customizado (ex.: bolinha de cor + nome da plataforma). Quando
+  /// nulo, usa [label] como texto. Em modo cartão, o rótulo continua [label].
+  final Widget? cabecalho;
 }
 
 /// Lista responsiva que decide pela **largura disponível do próprio widget**
@@ -82,9 +87,14 @@ class _Tabela<T> extends StatelessWidget {
 
     Widget celula(ColunaLista<T> c, Widget filho) {
       return Expanded(
-        child: Align(
-          alignment: c.alinhamento ?? Alignment.centerLeft,
-          child: filho,
+        child: Padding(
+          // Respiro entre colunas vizinhas, para valores à direita não
+          // encostarem no texto da coluna seguinte à esquerda.
+          padding: const EdgeInsets.only(right: Espacos.g12),
+          child: Align(
+            alignment: c.alinhamento ?? Alignment.centerLeft,
+            child: filho,
+          ),
         ),
       );
     }
@@ -102,7 +112,7 @@ class _Tabela<T> extends StatelessWidget {
               for (final c in lista.colunas)
                 celula(
                   c,
-                  Text(c.label, style: textos.labelLarge),
+                  c.cabecalho ?? Text(c.label, style: textos.labelLarge),
                 ),
               if (lista.acoes != null)
                 const SizedBox(width: 120, child: SizedBox.shrink()),

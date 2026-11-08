@@ -163,7 +163,7 @@ class _Conteudo extends StatelessWidget {
             ResponsiveList<ProdutoVenda>(
               itens: kits,
               semMoldura: true,
-              limiarCartao: 990,
+              limiarCartao: 560,
               acoes: (k) => Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -207,6 +207,7 @@ class _Conteudo extends StatelessWidget {
                   ColunaLista<ProdutoVenda>(
                     label: e.key.nome,
                     alinhamento: Alignment.centerRight,
+                    cabecalho: _CabecalhoPlataforma(plataforma: e.key),
                     builder: (k) => _CelulaPlataforma(
                       kit: k,
                       plataforma: e.key,
@@ -242,6 +243,46 @@ class _Conteudo extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Cabeçalho de uma coluna de plataforma: bolinha com a cor + nome (como o
+/// protótipo `<i class="dot">` + nome no `th`).
+class _CabecalhoPlataforma extends StatelessWidget {
+  const _CabecalhoPlataforma({required this.plataforma});
+
+  final Plataforma plataforma;
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = Theme.of(context).textTheme;
+    final cor = _parseHex(plataforma.cor) ?? context.cores.accent;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: cor, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            plataforma.nome,
+            style: textos.labelLarge,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Color? _parseHex(String hex) {
+    var limpo = hex.trim().replaceAll('#', '').toUpperCase();
+    if (limpo.length == 6) limpo = 'FF$limpo';
+    if (limpo.length != 8) return null;
+    final valor = int.tryParse(limpo, radix: 16);
+    return valor == null ? null : Color(valor);
   }
 }
 

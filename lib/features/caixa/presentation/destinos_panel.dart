@@ -78,7 +78,12 @@ class _DestinosPanelState extends ConsumerState<DestinosPanel> {
         .salvar();
     if (!mounted) return;
     if (ok) {
-      ref.invalidate(dadosCaixaProvider);
+      // Invalida as fontes (não só o agregado) para a lista recarregar do
+      // banco, e o controller para recapturar os destinos originais.
+      ref
+        ..invalidate(destinosCaixaProvider)
+        ..invalidate(dadosCaixaProvider)
+        ..invalidate(destinosControllerProvider(_args));
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Destinos salvos.')),
       );

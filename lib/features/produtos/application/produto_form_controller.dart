@@ -1,6 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sales/data/repositorios/produto_repository.dart';
 import 'package:sales/domain/entidades/produto.dart';
+import 'package:sales/features/composicao/application/composicao_providers.dart'
+    as composicao;
+import 'package:sales/features/pedidos/application/pedidos_providers.dart'
+    as pedidos;
 import 'package:sales/features/produtos/application/produtos_providers.dart';
 
 /// Controla as mutações de [Produto] (criar/atualizar/excluir).
@@ -34,7 +38,12 @@ class ProdutoFormController extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await acao();
-      _ref.invalidate(produtosProvider);
+      // Pedidos e Composição têm a própria cópia em cache da lista de
+      // produtos; invalida todas para refletir a mudança em todo o app.
+      _ref
+        ..invalidate(produtosProvider)
+        ..invalidate(pedidos.produtosProvider)
+        ..invalidate(composicao.produtosProvider);
       state = const AsyncValue.data(null);
       return true;
     } on Object catch (e, s) {

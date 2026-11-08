@@ -73,5 +73,8 @@ O protótipo avisa estoque baixo com `estoqueMin`, mas `Produto` não tem essa c
 ## D9 — Painel: pontos de atenção
 `pontosAtencao` usa os textos do protótipo e uma `GravidadeAtencao` (`ruim` → fundo `badSoft`; `atencao` → `warnSoft`). Destinos fora de 100% (tolerância 0,01) e kit com prejuízo são `ruim`; margem < 15% e códigos repetidos são `atencao`. "Itens mais vendidos" soma a quantidade da linha do pedido (kit não multiplica pelos itens), como o protótipo.
 
+## D7 — macOS: threads de UI e plataforma separadas
+Flutter 3.35 junta, por padrão, a thread de UI com a da plataforma no macOS (log: "Running with merged UI and platform thread. Experimental."). Com isso, a tela travava ao trocar de app (Cmd+Tab) e ao voltar, sem nenhuma exceção no log e com 0% de CPU (o app ficava esperando, não calculando). `macos/Runner/Info.plist` define `FLTEnableMergedPlatformUIThread = false`, voltando ao modelo de threads separadas. Reavaliar ao atualizar o Flutter.
+
 ## D10 — Pedido: rótulos de status e itens do editor
 O banco guarda `pedidos.situacao` como `concluido | cancelado | devolvido` (check constraint), então o enum `SituacaoPedido` não muda e não há migration. O editor exibe `concluido` = "Pago", `devolvido` = "Devolvido" e `cancelado` = "Cancelado". "Enviado" e "Entregue" do protótipo não são persistíveis: exigiriam uma migration alterando o check de `pedidos.situacao` (e o enum), por isso ficam fora. Ao editar, o editor busca o pedido completo (`pedidoCompletoProvider` → `obterComItens`) e só monta o formulário depois; itens já gravados mantêm o snapshot de custo e abelinhas (inclusive quando o produto/kit não existe mais). `PedidoRepository.listar` agora traz os itens (lista, painel e caixa).

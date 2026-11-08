@@ -83,8 +83,9 @@ class _InsumosPageState extends ConsumerState<InsumosPage> {
       children: [
         PageHeader(
           title: 'Compras de insumos',
-          subtitle: 'Caixas, etiquetas, papel e outros materiais usados '
-              'para enviar os pedidos.',
+          subtitle: 'Caixas, etiquetas, papel de impressão, fitas e outros '
+              'materiais. O valor unitário fica disponível para escolher '
+              'como embalagem na composição de custo.',
           actions: [
             FilledButton.icon(
               onPressed: _novo,
@@ -107,11 +108,6 @@ class _InsumosPageState extends ConsumerState<InsumosPage> {
           estado: insumosAsync,
           mensagemVazia: 'Nenhuma compra registrada.',
           aoTentarDeNovo: () => ref.invalidate(insumosProvider),
-          acaoVazio: FilledButton.icon(
-            onPressed: _novo,
-            icon: const Icon(LucideIcons.plus, size: 18),
-            label: const Text('Registrar compra'),
-          ),
           comDados: (lista) => ResponsiveList<CompraInsumo>(
             itens: lista,
             colunas: _colunas(destinos),

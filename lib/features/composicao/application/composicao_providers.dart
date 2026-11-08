@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sales/core/format/ordenacao.dart';
 import 'package:sales/data/repositorios/compra_insumo_repository.dart';
 import 'package:sales/data/repositorios/configuracoes_repository.dart';
 import 'package:sales/data/repositorios/empresa_atual_provider.dart';
@@ -112,8 +113,7 @@ class DadosEdicaoKit {
 
   /// Produtos ativos ordenados por nome (para o seletor de itens).
   List<Produto> get produtos =>
-      produtosPorId.values.toList()
-        ..sort((a, b) => a.nome.compareTo(b.nome));
+      ordenarAlfabetico(produtosPorId.values, (p) => p.nome);
 }
 
 /// Carrega tudo que o editor de kit precisa em um único provider.

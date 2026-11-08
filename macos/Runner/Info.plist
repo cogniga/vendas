@@ -28,5 +28,10 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<!-- Flutter 3.35 junta UI e plataforma na mesma thread no macOS
+	     ("Experimental"); isso travava a tela ao trocar de app (Cmd+Tab).
+	     Volta ao modelo de threads separadas. Ver docs/decisoes.md D7. -->
+	<key>FLTEnableMergedPlatformUIThread</key>
+	<false/>
 </dict>
 </plist>

@@ -42,6 +42,16 @@ class ConfiguracoesRepository {
         })
         .eq('empresa_id', config.empresaId);
   }
+
+  /// Grava só o padrão de escrita dos nomes (coluna `padrao_nome`, migration
+  /// 0004). Separado de [atualizar] para não afetar quem salva os demais
+  /// campos.
+  Future<void> atualizarPadraoNome(String empresaId, String valor) async {
+    await _client
+        .from('configuracoes')
+        .update({'padrao_nome': valor})
+        .eq('empresa_id', empresaId);
+  }
 }
 
 /// Provider do [ConfiguracoesRepository].

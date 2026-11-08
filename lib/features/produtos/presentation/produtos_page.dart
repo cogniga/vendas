@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:sales/core/format/formatos.dart';
+import 'package:sales/core/format/ordenacao.dart';
 import 'package:sales/core/theme/tokens.dart';
 import 'package:sales/core/widgets/abelinhas.dart';
 import 'package:sales/core/widgets/code_chip.dart';
@@ -117,7 +118,7 @@ class _ProdutosPageState extends ConsumerState<ProdutosPage> {
       for (final p in produtosAsync.valueOrNull ?? const <Produto>[])
         p.categoria,
     }.toList()
-      ..sort();
+      ..sort(compararAlfabetico);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

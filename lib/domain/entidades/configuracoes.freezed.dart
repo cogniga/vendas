@@ -33,6 +33,10 @@ mixin _$Configuracoes {
   @DecimalConverter()
   Decimal get valorAbelinha => throw _privateConstructorUsedError;
 
+  /// Padrão de escrita dos nomes: `titulo`, `maiusculas` ou `minusculas`.
+  @JsonKey(name: 'padrao_nome')
+  String get padraoNome => throw _privateConstructorUsedError;
+
   /// Serializes this Configuracoes to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -59,6 +63,7 @@ abstract class $ConfiguracoesCopyWith<$Res> {
     @DecimalConverter()
     Decimal impressaoPadrao,
     @JsonKey(name: 'valor_abelinha') @DecimalConverter() Decimal valorAbelinha,
+    @JsonKey(name: 'padrao_nome') String padraoNome,
   });
 }
 
@@ -81,6 +86,7 @@ class _$ConfiguracoesCopyWithImpl<$Res, $Val extends Configuracoes>
     Object? embalagemPadrao = null,
     Object? impressaoPadrao = null,
     Object? valorAbelinha = null,
+    Object? padraoNome = null,
   }) {
     return _then(
       _value.copyWith(
@@ -100,6 +106,10 @@ class _$ConfiguracoesCopyWithImpl<$Res, $Val extends Configuracoes>
                 ? _value.valorAbelinha
                 : valorAbelinha // ignore: cast_nullable_to_non_nullable
                       as Decimal,
+            padraoNome: null == padraoNome
+                ? _value.padraoNome
+                : padraoNome // ignore: cast_nullable_to_non_nullable
+                      as String,
           )
           as $Val,
     );
@@ -124,6 +134,7 @@ abstract class _$$ConfiguracoesImplCopyWith<$Res>
     @DecimalConverter()
     Decimal impressaoPadrao,
     @JsonKey(name: 'valor_abelinha') @DecimalConverter() Decimal valorAbelinha,
+    @JsonKey(name: 'padrao_nome') String padraoNome,
   });
 }
 
@@ -145,6 +156,7 @@ class __$$ConfiguracoesImplCopyWithImpl<$Res>
     Object? embalagemPadrao = null,
     Object? impressaoPadrao = null,
     Object? valorAbelinha = null,
+    Object? padraoNome = null,
   }) {
     return _then(
       _$ConfiguracoesImpl(
@@ -164,6 +176,10 @@ class __$$ConfiguracoesImplCopyWithImpl<$Res>
             ? _value.valorAbelinha
             : valorAbelinha // ignore: cast_nullable_to_non_nullable
                   as Decimal,
+        padraoNome: null == padraoNome
+            ? _value.padraoNome
+            : padraoNome // ignore: cast_nullable_to_non_nullable
+                  as String,
       ),
     );
   }
@@ -183,6 +199,7 @@ class _$ConfiguracoesImpl implements _Configuracoes {
     @JsonKey(name: 'valor_abelinha')
     @DecimalConverter()
     required this.valorAbelinha,
+    @JsonKey(name: 'padrao_nome') this.padraoNome = 'titulo',
   });
 
   factory _$ConfiguracoesImpl.fromJson(Map<String, dynamic> json) =>
@@ -204,9 +221,14 @@ class _$ConfiguracoesImpl implements _Configuracoes {
   @DecimalConverter()
   final Decimal valorAbelinha;
 
+  /// Padrão de escrita dos nomes: `titulo`, `maiusculas` ou `minusculas`.
+  @override
+  @JsonKey(name: 'padrao_nome')
+  final String padraoNome;
+
   @override
   String toString() {
-    return 'Configuracoes(empresaId: $empresaId, embalagemPadrao: $embalagemPadrao, impressaoPadrao: $impressaoPadrao, valorAbelinha: $valorAbelinha)';
+    return 'Configuracoes(empresaId: $empresaId, embalagemPadrao: $embalagemPadrao, impressaoPadrao: $impressaoPadrao, valorAbelinha: $valorAbelinha, padraoNome: $padraoNome)';
   }
 
   @override
@@ -221,7 +243,9 @@ class _$ConfiguracoesImpl implements _Configuracoes {
             (identical(other.impressaoPadrao, impressaoPadrao) ||
                 other.impressaoPadrao == impressaoPadrao) &&
             (identical(other.valorAbelinha, valorAbelinha) ||
-                other.valorAbelinha == valorAbelinha));
+                other.valorAbelinha == valorAbelinha) &&
+            (identical(other.padraoNome, padraoNome) ||
+                other.padraoNome == padraoNome));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -232,6 +256,7 @@ class _$ConfiguracoesImpl implements _Configuracoes {
     embalagemPadrao,
     impressaoPadrao,
     valorAbelinha,
+    padraoNome,
   );
 
   /// Create a copy of Configuracoes
@@ -260,6 +285,7 @@ abstract class _Configuracoes implements Configuracoes {
     @JsonKey(name: 'valor_abelinha')
     @DecimalConverter()
     required final Decimal valorAbelinha,
+    @JsonKey(name: 'padrao_nome') final String padraoNome,
   }) = _$ConfiguracoesImpl;
 
   factory _Configuracoes.fromJson(Map<String, dynamic> json) =
@@ -280,6 +306,11 @@ abstract class _Configuracoes implements Configuracoes {
   @JsonKey(name: 'valor_abelinha')
   @DecimalConverter()
   Decimal get valorAbelinha;
+
+  /// Padrão de escrita dos nomes: `titulo`, `maiusculas` ou `minusculas`.
+  @override
+  @JsonKey(name: 'padrao_nome')
+  String get padraoNome;
 
   /// Create a copy of Configuracoes
   /// with the given fields replaced by the non-null parameter values.

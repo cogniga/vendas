@@ -19,6 +19,9 @@ class Configuracoes with _$Configuracoes {
     @JsonKey(name: 'valor_abelinha')
     @DecimalConverter()
     required Decimal valorAbelinha,
+
+    /// Padrão de escrita dos nomes: `titulo`, `maiusculas` ou `minusculas`.
+    @JsonKey(name: 'padrao_nome') @Default('titulo') String padraoNome,
   }) = _Configuracoes;
 
   factory Configuracoes.fromJson(Map<String, dynamic> json) =>

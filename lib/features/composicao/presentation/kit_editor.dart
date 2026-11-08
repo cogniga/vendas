@@ -11,7 +11,9 @@ import 'package:sales/core/widgets/ledger.dart';
 import 'package:sales/core/widgets/painel_lateral.dart';
 import 'package:sales/core/widgets/pill.dart';
 import 'package:sales/core/widgets/platform_pill.dart';
+import 'package:sales/core/widgets/text_case_field.dart';
 import 'package:sales/data/repositorios/empresa_atual_provider.dart';
+import 'package:sales/data/repositorios/padrao_nome_provider.dart';
 import 'package:sales/domain/calculos/abelinhas.dart';
 import 'package:sales/domain/calculos/decimais.dart';
 import 'package:sales/domain/calculos/produto_venda.dart';
@@ -205,13 +207,12 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
+        TextCaseField(
+          caso: CasoTexto.nome,
+          padraoNome: ref.watch(padraoNomeProvider),
           controller: _nomeCtrl,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            labelText: 'Nome do anúncio',
-            hintText: 'Ex.: Kit 5 sachês máscara facial',
-          ),
+          label: 'Nome do anúncio',
+          dica: 'Ex.: Kit 5 sachês máscara facial',
         ),
         const SizedBox(height: Espacos.g16),
         LayoutBuilder(
@@ -1256,7 +1257,7 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
 
     setState(() => _salvando = true);
     final kit = _montarKit(empresaId: empresa.id).copyWith(
-      nome: PadraoEscrita.titulo(nome),
+      nome: PadraoEscrita.nome(nome, ref.read(padraoNomeProvider)),
     );
     final ok =
         await ref.read(kitFormControllerProvider.notifier).salvar(kit);

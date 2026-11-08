@@ -66,6 +66,26 @@ class _InvestimentoPageState extends ConsumerState<InvestimentoPage> {
   Widget build(BuildContext context) {
     final investimentosAsync = ref.watch(investimentosProvider);
     final destinos = ref.watch(destinosProvider).valueOrNull ?? const [];
+    final lista = investimentosAsync.valueOrNull ?? const <Investimento>[];
+
+    // KPIs calculados no topo (aparecem sempre, mesmo sem dados), como no
+    // protótipo: Total investido + os 3 maiores distribuidores.
+    final total = lista.fold<Decimal>(
+      Decimal.zero,
+      (soma, i) => soma + i.valor,
+    );
+    final porDistribuidor = <String, Decimal>{};
+    for (final i in lista) {
+      porDistribuidor[i.distribuidor] =
+          (porDistribuidor[i.distribuidor] ?? Decimal.zero) + i.valor;
+    }
+    final maiores = porDistribuidor.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    String pctDoTotal(Decimal valor) {
+      if (total == Decimal.zero) return '—';
+      return '${Formatos.percentualFracao((valor / total).toDouble())} '
+          'do total';
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -83,16 +103,27 @@ class _InvestimentoPageState extends ConsumerState<InvestimentoPage> {
             ),
           ],
         ),
+        KpiRow(
+          cartoes: [
+            KpiCard(
+              label: 'Total investido',
+              value: Formatos.moedaDecimal(total),
+              sub: '${lista.length} lançamento(s)',
+            ),
+            for (final e in maiores.take(3))
+              KpiCard(
+                label: e.key,
+                value: Formatos.moedaDecimal(e.value),
+                sub: pctDoTotal(e.value),
+              ),
+          ],
+        ),
+        const SizedBox(height: Espacos.g16),
         EstadoLista<Investimento>(
           estado: investimentosAsync,
           mensagemVazia: 'Nenhum investimento registrado. Use '
-              '“Registrar investimento” para lançar o primeiro.',
+              '"Registrar investimento" para lançar o primeiro.',
           aoTentarDeNovo: () => ref.invalidate(investimentosProvider),
-          acaoVazio: FilledButton.icon(
-            onPressed: () => _novo(destinos),
-            icon: const Icon(LucideIcons.plus, size: 18),
-            label: const Text('Registrar investimento'),
-          ),
           comDados: (investimentos) => _Conteudo(
             investimentos: investimentos,
             destinos: destinos,
@@ -133,15 +164,6 @@ class _Conteudo extends StatelessWidget {
       (soma, i) => soma + i.valor,
     );
 
-    // Soma por distribuidor (maiores primeiro).
-    final porDistribuidor = <String, Decimal>{};
-    for (final i in investimentos) {
-      porDistribuidor[i.distribuidor] =
-          (porDistribuidor[i.distribuidor] ?? Decimal.zero) + i.valor;
-    }
-    final maiores = porDistribuidor.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
     String percentualDoTotal(Decimal valor) {
       if (total == Decimal.zero) return '—';
       return '${Formatos.percentualFracao((valor / total).toDouble())} '
@@ -151,60 +173,39 @@ class _Conteudo extends StatelessWidget {
     final ordenados = [...investimentos]
       ..sort((a, b) => b.data.compareTo(a.data));
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        KpiRow(
-          cartoes: [
-            KpiCard(
-              label: 'Total investido',
-              value: Formatos.moedaDecimal(total),
-              sub: '${investimentos.length} lançamento(s)',
-            ),
-            for (final e in maiores.take(3))
-              KpiCard(
-                label: e.key,
-                value: Formatos.moedaDecimal(e.value),
-                sub: percentualDoTotal(e.value),
-              ),
-          ],
-        ),
-        const SizedBox(height: Espacos.g16),
-        ResponsiveList<Investimento>(
-          itens: ordenados,
-          acoes: (i) => Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconAction(
-                icon: LucideIcons.pencil,
-                tooltip: 'Editar investimento',
-                onPressed: () => onEditar(i, destinos),
-              ),
-              ConfirmDeleteButton(
-                tooltip: 'Excluir investimento',
-                onConfirm: () => onExcluir(i),
-              ),
-            ],
+    return ResponsiveList<Investimento>(
+      itens: ordenados,
+      acoes: (i) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconAction(
+            icon: LucideIcons.pencil,
+            tooltip: 'Editar investimento',
+            onPressed: () => onEditar(i, destinos),
           ),
-          colunas: [
-            ColunaLista<Investimento>(
-              label: 'Distribuidor',
-              principal: true,
-              builder: (i) => _CelulaDistribuidor(investimento: i),
-            ),
-            ColunaLista<Investimento>(
-              label: 'Valor',
-              alinhamento: Alignment.centerRight,
-              builder: (i) => _CelulaValor(
-                investimento: i,
-                percentual: percentualDoTotal(i.valor),
-              ),
-            ),
-            ColunaLista<Investimento>(
-              label: 'Pago com',
-              builder: (i) => _CelulaPagoCom(destino: _destinoDe(i.destinoId)),
-            ),
-          ],
+          ConfirmDeleteButton(
+            tooltip: 'Excluir investimento',
+            onConfirm: () => onExcluir(i),
+          ),
+        ],
+      ),
+      colunas: [
+        ColunaLista<Investimento>(
+          label: 'Distribuidor',
+          principal: true,
+          builder: (i) => _CelulaDistribuidor(investimento: i),
+        ),
+        ColunaLista<Investimento>(
+          label: 'Valor',
+          alinhamento: Alignment.centerRight,
+          builder: (i) => _CelulaValor(
+            investimento: i,
+            percentual: percentualDoTotal(i.valor),
+          ),
+        ),
+        ColunaLista<Investimento>(
+          label: 'Pago com',
+          builder: (i) => _CelulaPagoCom(destino: _destinoDe(i.destinoId)),
         ),
       ],
     );

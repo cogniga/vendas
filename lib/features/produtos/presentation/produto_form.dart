@@ -6,9 +6,12 @@ import 'package:sales/core/theme/tokens.dart';
 import 'package:sales/core/widgets/money_field.dart';
 import 'package:sales/core/widgets/painel_lateral.dart';
 import 'package:sales/core/widgets/text_case_field.dart';
+import 'package:sales/data/repositorios/padrao_nome_provider.dart';
+import 'package:sales/domain/calculos/codigo_produto.dart';
 import 'package:sales/domain/entidades/faixa_abelinha.dart';
 import 'package:sales/domain/entidades/produto.dart';
 import 'package:sales/features/produtos/application/produto_form_controller.dart';
+import 'package:sales/features/produtos/application/produtos_providers.dart';
 import 'package:sales/features/produtos/presentation/widgets/quadro_abelinhas.dart';
 
 /// Abre o formulário de produto como painel lateral (560 px).
@@ -90,6 +93,27 @@ class _ProdutoFormState extends ConsumerState<_ProdutoForm> {
     _editandoManual = p?.abelinhasManual != null;
     _ativo = p?.ativo ?? true;
     if (p != null && p.id.isNotEmpty) _carregarKits(p.id);
+    // Produto novo: o código acompanha o nome. Produto existente mantém o
+    // código (estável), salvo se estiver vazio.
+    if (_codigoAutomatico) _nome.addListener(_atualizarCodigo);
+  }
+
+  /// O código é gerado pelo sistema para produtos novos (ou sem código).
+  bool get _codigoAutomatico =>
+      widget.produto == null || widget.produto!.codigo.trim().isEmpty;
+
+  /// Códigos já usados na empresa, exceto o do próprio produto em edição.
+  Iterable<String> _codigosExistentes() {
+    final produtos = ref.read(produtosProvider).valueOrNull ?? const [];
+    final idAtual = widget.produto?.id;
+    return produtos
+        .where((p) => idAtual == null || idAtual.isEmpty || p.id != idAtual)
+        .map((p) => p.codigo);
+  }
+
+  void _atualizarCodigo() {
+    final novo = gerarCodigoProduto(_nome.text, _codigosExistentes());
+    if (_codigo.text != novo) _codigo.text = novo;
   }
 
   Future<void> _carregarKits(String id) async {
@@ -113,16 +137,19 @@ class _ProdutoFormState extends ConsumerState<_ProdutoForm> {
   }
 
   Future<void> _salvar() async {
+    // Recalcula com a lista mais recente antes de gravar (evita colisão).
+    if (_codigoAutomatico) _atualizarCodigo();
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final controller = ref.read(produtoFormControllerProvider.notifier);
     final atual = widget.produto;
+    final padrao = ref.read(padraoNomeProvider);
     // "Pela regra" quando o manual é igual à regra (R3.6).
     final produto = (atual ?? _novo()).copyWith(
       codigo: PadraoEscrita.maius(_codigo.text),
-      nome: PadraoEscrita.titulo(_nome.text),
-      marca: PadraoEscrita.titulo(_marca.text),
+      nome: PadraoEscrita.nome(_nome.text, padrao),
+      marca: PadraoEscrita.nome(_marca.text, padrao),
       categoria: PadraoEscrita.frase(_categoria.text),
-      fornecedor: PadraoEscrita.titulo(_fornecedor.text),
+      fornecedor: PadraoEscrita.nome(_fornecedor.text, padrao),
       unidade: _unidade.text.trim().isEmpty ? 'un' : _unidade.text.trim(),
       ean: _ean.text.trim(),
       estoque: int.tryParse(_estoque.text.trim()) ?? 0,
@@ -179,6 +206,9 @@ class _ProdutoFormState extends ConsumerState<_ProdutoForm> {
   Widget build(BuildContext context) {
     final estado = ref.watch(produtoFormControllerProvider);
     final carregando = estado.isLoading;
+    // Mantém a lista de produtos viva para checar códigos já usados.
+    ref.watch(produtosProvider);
+    final padrao = ref.watch(padraoNomeProvider);
 
     return CorpoPainelLateral(
       rodape: RodapePainel(
@@ -193,15 +223,25 @@ class _ProdutoFormState extends ConsumerState<_ProdutoForm> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextCaseField(
-              caso: CasoTexto.titulo,
+              caso: CasoTexto.nome,
+              padraoNome: padrao,
               controller: _nome,
               label: 'Nome do produto',
             ),
             const SizedBox(height: Espacos.g12),
-            TextCaseField(
-              caso: CasoTexto.maius,
+            TextField(
               controller: _codigo,
-              label: 'Código',
+              readOnly: true,
+              enableInteractiveSelection: true,
+              decoration: InputDecoration(
+                labelText: 'Código',
+                hintText: 'Gerado a partir do nome',
+                helperText: _codigoAutomatico
+                    ? 'Gerado automaticamente a partir do nome (único).'
+                    : 'Código fixo do produto.',
+                filled: true,
+                fillColor: context.cores.surface2,
+              ),
             ),
             const SizedBox(height: Espacos.base),
             _ValidadorCodigoNome(nome: _nome, codigo: _codigo),
@@ -210,7 +250,8 @@ class _ProdutoFormState extends ConsumerState<_ProdutoForm> {
               children: [
                 Expanded(
                   child: TextCaseField(
-                    caso: CasoTexto.titulo,
+                    caso: CasoTexto.nome,
+              padraoNome: padrao,
                     controller: _marca,
                     label: 'Marca',
                   ),
@@ -227,7 +268,8 @@ class _ProdutoFormState extends ConsumerState<_ProdutoForm> {
             ),
             const SizedBox(height: Espacos.g12),
             TextCaseField(
-              caso: CasoTexto.titulo,
+              caso: CasoTexto.nome,
+              padraoNome: padrao,
               controller: _fornecedor,
               label: 'Fornecedor',
             ),
@@ -312,7 +354,7 @@ class _ValidadorCodigoNome extends StatelessWidget {
     return FormField<bool>(
       validator: (_) {
         if (nome.text.trim().isEmpty || codigo.text.trim().isEmpty) {
-          return 'Informe código e nome do produto';
+          return 'Informe o nome do produto (com letras ou números)';
         }
         return null;
       },

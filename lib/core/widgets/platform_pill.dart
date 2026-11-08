@@ -14,22 +14,33 @@ class PlatformPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final base = _parseCor(cor) ?? context.cores.accent;
-    final tinta = _contraste(base);
+    final tinta = context.cores.muted;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
       decoration: BoxDecoration(
-        color: base.withValues(alpha: 0.16),
+        color: context.cores.surface2,
         borderRadius: BorderRadius.circular(Raios.pill),
-        border: Border.all(color: base.withValues(alpha: 0.5)),
       ),
-      child: Text(
-        nome,
-        style: TextStyle(
-          color: tinta,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Bolinha com a cor própria da plataforma (dot 8px do protótipo).
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: base, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            nome,
+            style: TextStyle(
+              color: tinta,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -40,14 +51,5 @@ class PlatformPill extends StatelessWidget {
     if (limpo.length != 8) return null;
     final valor = int.tryParse(limpo, radix: 16);
     return valor == null ? null : Color(valor);
-  }
-
-  /// Escurece a cor base para garantir legibilidade do texto sobre o fundo
-  /// translúcido.
-  static Color _contraste(Color base) {
-    final hsl = HSLColor.fromColor(base);
-    return hsl
-        .withLightness((hsl.lightness - 0.25).clamp(0.0, 1.0))
-        .toColor();
   }
 }

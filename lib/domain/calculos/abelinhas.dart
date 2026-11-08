@@ -11,6 +11,8 @@ import 'package:sales/domain/entidades/produto.dart';
 /// Abelinhas pela regra de faixas: primeira faixa com `custo <= custoAte`;
 /// senão a última (indicando que o custo está acima da tabela).
 Decimal abelinhasRegra(Decimal custo, List<FaixaAbelinha> faixas) {
+  // Sem faixas (ex.: regra ainda vazia ou toda removida): 0 abelinhas.
+  if (faixas.isEmpty) return zero;
   final ordenadas = [...faixas]
     ..sort((a, b) => a.custoAte.compareTo(b.custoAte));
   for (final f in ordenadas) {
@@ -21,6 +23,7 @@ Decimal abelinhasRegra(Decimal custo, List<FaixaAbelinha> faixas) {
 
 /// Indica se o [custo] está acima do teto da maior faixa.
 bool acimaDaTabela(Decimal custo, List<FaixaAbelinha> faixas) {
+  if (faixas.isEmpty) return false;
   final maior = faixas
       .map((f) => f.custoAte)
       .reduce((a, b) => a > b ? a : b);

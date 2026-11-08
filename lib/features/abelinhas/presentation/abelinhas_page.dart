@@ -10,6 +10,7 @@ import 'package:sales/core/widgets/page_header.dart';
 import 'package:sales/core/widgets/pill.dart';
 import 'package:sales/core/widgets/responsive_list.dart';
 import 'package:sales/domain/calculos/abelinhas.dart';
+import 'package:sales/domain/entidades/faixa_abelinha.dart';
 import 'package:sales/features/abelinhas/application/abelinhas_controller.dart';
 import 'package:sales/features/abelinhas/application/abelinhas_providers.dart';
 
@@ -100,8 +101,8 @@ class _Conteudo extends ConsumerWidget {
     final v = estado.valorAbelinha;
 
     final geral = analiseGeral(dados.produtos, estado.faixas, v);
-    final porFaixa = analisePorFaixa(dados.produtos, estado.faixas, v);
-    final exemplo = _exemploReal(geral, v);
+    final porFaixa = _analisesNaOrdemDaTela(estado.faixas, v);
+    final exemplo = _exemploReal(geral, v, estado.faixas);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -167,20 +168,48 @@ class _Conteudo extends ConsumerWidget {
     );
   }
 
+  /// Análises por faixa na **mesma ordem das linhas em edição**.
+  ///
+  /// `analisePorFaixa` ordena por "Custo até"; se a tela usasse essa ordem,
+  /// digitar um teto que muda a posição da faixa faria a linha (e o campo com
+  /// foco) apontar para outra faixa. Aqui cada análise volta para o índice da
+  /// faixa em `estado.faixas`, que só é reordenado ao salvar.
+  List<AnaliseFaixa> _analisesNaOrdemDaTela(
+    List<FaixaAbelinha> faixas,
+    Decimal v,
+  ) {
+    final ordem = List<int>.generate(faixas.length, (i) => i)
+      ..sort((a, b) {
+        final c = faixas[a].custoAte.compareTo(faixas[b].custoAte);
+        return c != 0 ? c : a.compareTo(b);
+      });
+    final ordenadas = [for (final i in ordem) faixas[i]];
+    final analises = analisePorFaixa(dados.produtos, ordenadas, v);
+    final porLinha = List<AnaliseFaixa?>.filled(faixas.length, null);
+    for (var k = 0; k < ordem.length; k++) {
+      porLinha[ordem[k]] = analises[k];
+    }
+    return porLinha.cast<AnaliseFaixa>();
+  }
+
   /// Texto de exemplo real: produto com ROI mais próximo da média (atualiza
-  /// com `v`).
-  String _exemploReal(AnaliseGeralAbelinhas geral, Decimal v) {
+  /// com `v` e com as faixas em edição).
+  String _exemploReal(
+    AnaliseGeralAbelinhas geral,
+    Decimal v,
+    List<FaixaAbelinha> faixas,
+  ) {
     final comCusto =
         dados.produtos.where((p) => p.custo > Decimal.zero).toList();
     if (comCusto.isEmpty) return 'Sem produtos com custo.';
     final media = geral.roiMedioGeral;
     comCusto.sort((a, b) {
-      final ra = roiProduto(a, v, dados.faixas);
-      final rb = roiProduto(b, v, dados.faixas);
+      final ra = roiProduto(a, v, faixas);
+      final rb = roiProduto(b, v, faixas);
       return (ra - media).abs().compareTo((rb - media).abs());
     });
     final p = comCusto.first;
-    final roi = roiProduto(p, v, dados.faixas);
+    final roi = roiProduto(p, v, faixas);
     return 'Ex.: ${p.nome} · ROI '
         '${Formatos.percentualFracao(roi.toDouble())}';
   }

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sales/core/config/supabase_config.dart';
+import 'package:sales/core/format/ordenacao.dart';
 import 'package:sales/data/repositorios/erros_repositorio.dart';
 import 'package:sales/domain/entidades/produto.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,14 +12,14 @@ class ProdutoRepository {
 
   final SupabaseClient _client;
 
-  /// Lista os produtos da empresa [empresaId] ordenados por `nome`.
+  /// Lista os produtos da empresa [empresaId] em ordem alfabética pt-BR do
+  /// nome (sem diferenciar maiúsculas/acentos; ver `ordenacao.dart`).
   Future<List<Produto>> listar(String empresaId) async {
     final linhas = await _client
         .from('produto_online')
         .select()
-        .eq('empresa_id', empresaId)
-        .order('nome');
-    return linhas.map(Produto.fromJson).toList();
+        .eq('empresa_id', empresaId);
+    return ordenarAlfabetico(linhas.map(Produto.fromJson), (p) => p.nome);
   }
 
   /// Obtém um produto por [id] ou `null` se não existir.

@@ -157,7 +157,19 @@ class _Corpo extends StatelessWidget {
             padLateral,
             padBase,
           ),
-          child: child,
+          // Força o conteúdo a ocupar toda a largura e ancorar no topo. O
+          // `ConstrainedBox` com minHeight = altura disponível + a coluna
+          // alinhada ao topo garantem que telas com pouco conteúdo nunca
+          // apareçam centralizadas verticalmente.
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight - padTopo - padBase,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [child],
+            ),
+          ),
         );
       },
     );

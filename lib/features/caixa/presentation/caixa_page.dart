@@ -90,7 +90,11 @@ class CaixaPage extends ConsumerWidget {
       destinos: destinos,
       plataformas: plataformas,
     );
-    if (salvou ?? false) ref.invalidate(dadosCaixaProvider);
+    if (salvou ?? false) {
+      ref
+        ..invalidate(saquesProvider)
+        ..invalidate(dadosCaixaProvider);
+    }
   }
 
   Future<void> _registrarRetirada(
@@ -105,33 +109,22 @@ class CaixaPage extends ConsumerWidget {
       empresaId: empresa.id,
       destinos: destinos,
     );
-    if (salvou ?? false) ref.invalidate(dadosCaixaProvider);
+    if (salvou ?? false) {
+      ref
+        ..invalidate(retiradasProvider)
+        ..invalidate(dadosCaixaProvider);
+    }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(dadosCaixaProvider);
-    return async.when(
-      loading: () => const Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          PageHeader(title: 'Caixa e saques'),
-          Padding(
-            padding: EdgeInsets.all(Espacos.g20),
-            child: CircularProgressIndicator(),
-          ),
-        ],
-      ),
-      error: (e, _) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const PageHeader(title: 'Caixa e saques'),
-          _Erro(onTentar: () => ref.invalidate(dadosCaixaProvider)),
-        ],
-      ),
-      data: (dados) => _Conteudo(
+
+    // Mantém a tela com o último dado conhecido durante uma atualização,
+    // evitando o "flash" do indicador de carregamento ao abrir a tela.
+    final dados = async.valueOrNull;
+    if (dados != null) {
+      return _Conteudo(
         dados: dados,
         onRegistrarSaque: () => _registrarSaque(
           context,
@@ -141,7 +134,32 @@ class CaixaPage extends ConsumerWidget {
         ),
         onRegistrarRetirada: () =>
             _registrarRetirada(context, ref, dados.destinos),
-      ),
+      );
+    }
+
+    // Erro na primeira carga (sem dado anterior).
+    if (async.hasError) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const PageHeader(title: 'Caixa e saques'),
+          _Erro(onTentar: () => ref.invalidate(dadosCaixaProvider)),
+        ],
+      );
+    }
+
+    // Primeira carga, sem dado ainda: cabeçalho + skeleton discreto.
+    return const Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PageHeader(title: 'Caixa e saques'),
+        Padding(
+          padding: EdgeInsets.all(Espacos.g20),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ],
     );
   }
 }
@@ -157,14 +175,61 @@ class _Conteudo extends ConsumerWidget {
   final VoidCallback onRegistrarSaque;
   final VoidCallback onRegistrarRetirada;
 
-  Future<void> _excluirSaque(WidgetRef ref, String id) async {
-    await ref.read(saqueRepositoryProvider).excluir(id);
-    ref.invalidate(dadosCaixaProvider);
-  }
+  Future<void> _excluirSaque(
+    BuildContext context,
+    WidgetRef ref,
+    String id,
+  ) =>
+      _excluir(
+        context,
+        ref,
+        () => ref.read(saqueRepositoryProvider).excluir(id),
+        // Invalida a FONTE (cache de saques); só o agregado não basta,
+        // porque ele relê o saquesProvider ainda com a lista antiga.
+        () => ref.invalidate(saquesProvider),
+        'Saque excluído.',
+      );
 
-  Future<void> _excluirRetirada(WidgetRef ref, String id) async {
-    await ref.read(retiradaRepositoryProvider).excluir(id);
-    ref.invalidate(dadosCaixaProvider);
+  Future<void> _excluirRetirada(
+    BuildContext context,
+    WidgetRef ref,
+    String id,
+  ) =>
+      _excluir(
+        context,
+        ref,
+        () => ref.read(retiradaRepositoryProvider).excluir(id),
+        () => ref.invalidate(retiradasProvider),
+        'Retirada excluída.',
+      );
+
+  /// Exclui, recarrega a fonte + o agregado e avisa o resultado (inclusive
+  /// erro, que antes era engolido em silêncio).
+  Future<void> _excluir(
+    BuildContext context,
+    WidgetRef ref,
+    Future<void> Function() acao,
+    VoidCallback invalidarFonte,
+    String mensagemOk,
+  ) async {
+    final mensageiro = ScaffoldMessenger.of(context);
+    try {
+      await acao();
+      invalidarFonte();
+      ref.invalidate(dadosCaixaProvider);
+      mensageiro.showSnackBar(SnackBar(content: Text(mensagemOk)));
+    } on Object catch (e) {
+      final texto = e.toString();
+      mensageiro.showSnackBar(
+        SnackBar(
+          content: Text(
+            texto.startsWith('ErroRepositorio: ')
+                ? texto.substring('ErroRepositorio: '.length)
+                : 'Não foi possível excluir. Tente de novo.',
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -241,8 +306,8 @@ class _Conteudo extends ConsumerWidget {
         const SizedBox(height: Espacos.g16),
         _Extrato(
           dados: dados,
-          onExcluirSaque: (id) => _excluirSaque(ref, id),
-          onExcluirRetirada: (id) => _excluirRetirada(ref, id),
+          onExcluirSaque: (id) => _excluirSaque(context, ref, id),
+          onExcluirRetirada: (id) => _excluirRetirada(context, ref, id),
         ),
       ],
     );

@@ -8,8 +8,14 @@ import 'package:decimal/decimal.dart';
 extension CalculoDecimal on Decimal {
   /// Divide preservando precisão (escala interna de 20 casas quando a divisão
   /// não é exata). Usado nos cálculos de margem, ROI etc.
-  Decimal dividir(Decimal outro) =>
-      (this / outro).toDecimal(scaleOnInfinitePrecision: 20);
+  ///
+  /// Divisão por zero devolve zero (em vez de lançar), para que dados
+  /// transitórios ou incompletos — como uma faixa recém-editada com "Custo
+  /// até" ou "Abelinhas" ainda em branco — nunca derrubem a tela.
+  Decimal dividir(Decimal outro) {
+    if (outro.compareTo(Decimal.zero) == 0) return Decimal.zero;
+    return (this / outro).toDecimal(scaleOnInfinitePrecision: 20);
+  }
 
   /// Arredonda para 2 casas (meio para cima), como na exibição em R$.
   Decimal arred2() => round(scale: 2);

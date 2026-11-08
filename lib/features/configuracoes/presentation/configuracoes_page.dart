@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:sales/core/format/padrao_escrita.dart';
 import 'package:sales/core/theme/tema_provider.dart';
 import 'package:sales/core/theme/tokens.dart';
 import 'package:sales/core/widgets/page_header.dart';
+import 'package:sales/data/repositorios/configuracoes_repository.dart';
 import 'package:sales/data/repositorios/empresa_atual_provider.dart';
 import 'package:sales/data/repositorios/empresa_selecionada.dart';
+import 'package:sales/data/repositorios/padrao_nome_provider.dart';
 import 'package:sales/domain/entidades/empresa.dart';
 import 'package:sales/features/configuracoes/application/configuracoes_providers.dart';
 
@@ -27,6 +30,8 @@ class ConfiguracoesPage extends ConsumerWidget {
           subtitle: 'Empresa ativa, aparência e preferências do sistema.',
         ),
         _BlocoEmpresa(),
+        SizedBox(height: Espacos.g20),
+        _BlocoPadraoNome(),
         SizedBox(height: Espacos.g20),
         _BlocoTema(),
       ],
@@ -131,6 +136,81 @@ class _BlocoEmpresaState extends ConsumerState<_BlocoEmpresa> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Não foi possível salvar. Tente de novo.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _salvando = false);
+    }
+  }
+}
+
+/// Padrão de escrita dos nomes (Título / MAIÚSCULAS / minúsculas), por
+/// empresa. Aplicado ao digitar em produto, marca, fornecedor, insumo,
+/// distribuidor e kit.
+class _BlocoPadraoNome extends ConsumerStatefulWidget {
+  const _BlocoPadraoNome();
+
+  @override
+  ConsumerState<_BlocoPadraoNome> createState() => _BlocoPadraoNomeState();
+}
+
+class _BlocoPadraoNomeState extends ConsumerState<_BlocoPadraoNome> {
+  bool _salvando = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final atual = ref.watch(padraoNomeProvider);
+    final textos = Theme.of(context).textTheme;
+    final cores = context.cores;
+
+    return _Painel(
+      titulo: 'Padrão de escrita dos nomes',
+      subtitulo: 'Vale para nome do produto, marca, fornecedor, insumo, '
+          'distribuidor e kit. Aplicado enquanto digita, para todos '
+          'escreverem igual.',
+      filho: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SegmentedButton<PadraoNome>(
+            segments: [
+              for (final p in PadraoNome.values)
+                ButtonSegment(value: p, label: Text(p.rotulo)),
+            ],
+            selected: {atual},
+            onSelectionChanged:
+                _salvando ? null : (s) => _salvar(s.first),
+          ),
+          const SizedBox(height: Espacos.g12),
+          Text(
+            'Exemplo: ${PadraoEscrita.nome('batom matte DE vermelho', atual)}',
+            style: textos.bodySmall?.copyWith(color: cores.muted),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _salvar(PadraoNome padrao) async {
+    setState(() => _salvando = true);
+    try {
+      final empresa = await ref.read(empresaAtualProvider.future);
+      if (empresa == null) throw StateError('sem empresa');
+      await ref
+          .read(configuracoesRepositoryProvider)
+          .atualizarPadraoNome(empresa.id, padrao.valorBanco);
+      ref.invalidate(padraoNomeAsyncProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Nomes agora seguem: ${padrao.rotulo}.')),
+      );
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível salvar. Verifique se a migration '
+            '0004_padrao_nome.sql foi aplicada.',
+          ),
         ),
       );
     } finally {

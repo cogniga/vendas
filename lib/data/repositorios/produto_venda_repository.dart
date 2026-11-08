@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sales/core/config/supabase_config.dart';
+import 'package:sales/core/format/ordenacao.dart';
 import 'package:sales/domain/entidades/preco_plataforma.dart';
 import 'package:sales/domain/entidades/produto_venda.dart';
 import 'package:sales/domain/entidades/produto_venda_item.dart';
@@ -41,13 +42,15 @@ class ProdutoVendaRepository {
       final preco = PrecoPlataforma.fromJson(l);
       (porPrecos[preco.produtoVendaId] ??= {})[preco.plataformaId] = preco;
     }
-    return linhas.map((l) {
+    final kits = linhas.map((l) {
       final pv = ProdutoVenda.fromJson(l);
       return pv.copyWith(
         itens: porItens[pv.id] ?? const [],
         precosPorPlataforma: porPrecos[pv.id] ?? const {},
       );
-    }).toList();
+    });
+    // Ordem alfabética pt-BR (o order by do banco diferencia maiúsculas).
+    return ordenarAlfabetico(kits, (k) => k.nome);
   }
 
   /// Obtém o kit [id] completo (itens + preços por plataforma).

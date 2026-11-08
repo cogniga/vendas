@@ -164,10 +164,19 @@ class ArgsDestinos {
   final String empresaId;
   final List<Destino> originais;
 
-  @override
-  bool operator ==(Object other) =>
-      other is ArgsDestinos && other.empresaId == empresaId;
+  /// Assinatura dos originais (ids + nome + cor + percentual + ordem), para
+  /// que o controller seja recriado quando a lista salva mudar — evitando
+  /// estado obsoleto que quebrava o diff no próximo salvamento.
+  String get _assinatura => originais
+      .map((d) => '${d.id}|${d.nome}|${d.cor}|${d.percentual}|${d.ordem}')
+      .join(';');
 
   @override
-  int get hashCode => empresaId.hashCode;
+  bool operator ==(Object other) =>
+      other is ArgsDestinos &&
+      other.empresaId == empresaId &&
+      other._assinatura == _assinatura;
+
+  @override
+  int get hashCode => Object.hash(empresaId, _assinatura);
 }

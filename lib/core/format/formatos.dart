@@ -50,6 +50,12 @@ class Formatos {
   /// Remove separador de milhar e aceita vírgula como decimal. Retorna `null`
   /// se o texto não representar um número.
   static double? parseNumero(String texto) {
+    final normalizado = _normalizar(texto);
+    return normalizado == null ? null : double.tryParse(normalizado);
+  }
+
+  /// Normaliza o texto digitado para o formato `1234.56` (ou `null`).
+  static String? _normalizar(String texto) {
     final limpo = texto.trim();
     if (limpo.isEmpty) return null;
     // Remove tudo que não for dígito, vírgula, ponto ou sinal.
@@ -62,13 +68,15 @@ class Formatos {
     } else if (temVirgula) {
       normalizado = normalizado.replaceAll(',', '.');
     }
-    return double.tryParse(normalizado);
+    return normalizado.isEmpty ? null : normalizado;
   }
 
   /// Converte texto digitado em [Decimal], ou `null` se inválido.
+  ///
+  /// Não passa por `double`: evita perda de precisão e exceções com números
+  /// longos (ex.: "1e+21").
   static Decimal? parseDecimal(String texto) {
-    final d = parseNumero(texto);
-    if (d == null) return null;
-    return Decimal.parse(d.toString());
+    final normalizado = _normalizar(texto);
+    return normalizado == null ? null : Decimal.tryParse(normalizado);
   }
 }

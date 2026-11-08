@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sales/data/repositorios/compra_insumo_repository.dart';
 import 'package:sales/data/repositorios/destino_repository.dart';
 import 'package:sales/data/repositorios/empresa_atual_provider.dart';
-import 'package:sales/data/repositorios/investimento_repository.dart';
 import 'package:sales/data/repositorios/retirada_repository.dart';
 import 'package:sales/data/repositorios/saque_repository.dart';
 import 'package:sales/domain/entidades/compra_insumo.dart';
@@ -13,6 +11,10 @@ import 'package:sales/domain/entidades/pedido.dart';
 import 'package:sales/domain/entidades/plataforma.dart';
 import 'package:sales/domain/entidades/retirada.dart';
 import 'package:sales/domain/entidades/saque.dart';
+import 'package:sales/features/compras_insumos/application/insumos_providers.dart'
+    as insumos;
+import 'package:sales/features/investimento/application/investimento_providers.dart'
+    as investimento;
 import 'package:sales/features/pedidos/application/pedidos_providers.dart';
 
 /// Destinos de rateio do caixa da empresa ativa (ordem por `ordem`).
@@ -36,19 +38,17 @@ final retiradasProvider = FutureProvider<List<Retirada>>((ref) async {
   return ref.watch(retiradaRepositoryProvider).listar(empresa.id);
 });
 
-/// Investimentos da empresa ativa (ordem data desc).
+/// Investimentos da empresa ativa — REUSA o provider da feature de
+/// Investimento para que criar/editar lá reflita no caixa (sem cache duplo).
 final investimentosCaixaProvider =
     FutureProvider<List<Investimento>>((ref) async {
-  final empresa = await ref.watch(empresaAtualProvider.future);
-  if (empresa == null) return [];
-  return ref.watch(investimentoRepositoryProvider).listar(empresa.id);
+  return ref.watch(investimento.investimentosProvider.future);
 });
 
-/// Compras de insumo da empresa ativa (ordem data desc).
+/// Compras de insumo da empresa ativa — REUSA o provider da feature de
+/// Insumos para que criar/editar lá reflita no caixa (sem cache duplo).
 final insumosCaixaProvider = FutureProvider<List<CompraInsumo>>((ref) async {
-  final empresa = await ref.watch(empresaAtualProvider.future);
-  if (empresa == null) return [];
-  return ref.watch(compraInsumoRepositoryProvider).listar(empresa.id);
+  return ref.watch(insumos.insumosProvider.future);
 });
 
 /// Dados agregados que a tela de caixa consome, carregados juntos.

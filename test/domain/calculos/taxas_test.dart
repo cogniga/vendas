@@ -17,6 +17,18 @@ void main() {
           Decimal.parse('26'));
     });
 
+    test('até 50 · 50,01 a 100 · acima de 100 (início calculado)', () {
+      const d = Decimal.parse;
+      // Ordem de edição bagunçada: a sem limite no meio.
+      expect(iniciosDasFaixas([d('100'), null, d('50')]), [
+        d('50.01'),
+        d('100.01'),
+        Decimal.zero,
+      ]);
+      expect(iniciosDasFaixas([null]), [Decimal.zero]);
+      expect(iniciosDasFaixas([]), isEmpty);
+    });
+
     test('faixa sem limite fica por último na ordenação', () {
       expect(faixa(faixasVendaDireta(), Decimal.parse('999')).taxaPercentual,
           Decimal.zero);

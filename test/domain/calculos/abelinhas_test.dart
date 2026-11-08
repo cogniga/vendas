@@ -5,6 +5,8 @@ import 'package:sales/domain/calculos/abelinhas.dart';
 import '../seed_helper.dart';
 import 'tolerancia.dart';
 
+final zeroDec = Decimal.parse('0.00');
+
 void main() {
   late Seed seed;
 
@@ -33,6 +35,33 @@ void main() {
       );
       esperaPct(geral.roiMedioGeral, '49.2');
       expect(geral.comPrejuizo, 9);
+    });
+  });
+
+  group('regra incompleta não lança divisão por zero', () {
+    test('sem faixas', () {
+      expect(
+        () => analiseGeral(seed.produtos(), [], Decimal.fromInt(10)),
+        returnsNormally,
+      );
+    });
+
+    test('valor da abelinha zero', () {
+      expect(
+        () => analiseGeral(seed.produtos(), seed.faixasAbelinha(), zeroDec),
+        returnsNormally,
+      );
+    });
+
+    test('faixas com abelinhas e teto zerados', () {
+      final faixas = seed
+          .faixasAbelinha()
+          .map((f) => f.copyWith(abelinhas: zeroDec, custoAte: zeroDec))
+          .toList();
+      expect(
+        () => analiseGeral(seed.produtos(), faixas, Decimal.fromInt(10)),
+        returnsNormally,
+      );
     });
   });
 

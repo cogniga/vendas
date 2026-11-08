@@ -1,13 +1,76 @@
+/// Padrão escolhido pela empresa para os **nomes** (produto, marca,
+/// fornecedor, insumo, distribuidor, kit). Coluna `configuracoes.padrao_nome`.
+enum PadraoNome {
+  /// "Batom Matte de Vermelho" (cada palavra com inicial maiúscula).
+  titulo('titulo', 'Título'),
+
+  /// "BATOM MATTE DE VERMELHO".
+  maiusculas('maiusculas', 'MAIÚSCULAS'),
+
+  /// "batom matte de vermelho".
+  minusculas('minusculas', 'minúsculas');
+
+  const PadraoNome(this.valorBanco, this.rotulo);
+
+  /// Valor gravado no banco.
+  final String valorBanco;
+
+  /// Rótulo exibido na tela.
+  final String rotulo;
+
+  /// Converte o valor do banco; desconhecido/nulo vira [titulo].
+  static PadraoNome doBanco(String? valor) => PadraoNome.values.firstWhere(
+        (p) => p.valorBanco == valor,
+        orElse: () => PadraoNome.titulo,
+      );
+}
+
 /// Normalização de texto — padrão de escrita (design.md §8).
 ///
+/// - [nome]: nomes (produto, marca, fornecedor, kit, distribuidor, insumo)
+///   pelo [PadraoNome] da empresa.
 /// - [titulo]: Título com conectivos minúsculos, siglas em maiúsculas, palavras
-///   com dígito preservadas. Usado em nomes (produto, marca, fornecedor, kit,
-///   distribuidor, insumo).
+///   com dígito preservadas.
 /// - [frase]: só a primeira letra maiúscula (resto como digitado). Usado em
 ///   categoria, descrição, destino, observações.
 /// - [maius]: tudo maiúsculo. Usado em código, cliente/nº do pedido, nota.
 class PadraoEscrita {
   const PadraoEscrita._();
+
+  /// Normaliza um nome pelo [padrao] da empresa (ao salvar / sair do campo).
+  static String nome(String texto, PadraoNome padrao) => switch (padrao) {
+        PadraoNome.titulo => titulo(texto),
+        PadraoNome.maiusculas => maius(texto),
+        PadraoNome.minusculas => _colapsar(texto).toLowerCase(),
+      };
+
+  /// Versão "ao digitar" de [nome]: muda só maiúsculas/minúsculas, sem mexer
+  /// em espaços (para não atrapalhar a digitação) e mantendo o tamanho do
+  /// texto (o cursor não pula).
+  static String nomeAoDigitar(String texto, PadraoNome padrao) {
+    switch (padrao) {
+      case PadraoNome.maiusculas:
+        return texto.toUpperCase();
+      case PadraoNome.minusculas:
+        return texto.toLowerCase();
+      case PadraoNome.titulo:
+        var indice = 0;
+        return texto.splitMapJoin(
+          RegExp(r'\S+'),
+          onMatch: (m) {
+            final p = m[0]!;
+            final primeira = indice++ == 0;
+            if (_temDigito(p)) return p;
+            if (siglas.contains(p.toUpperCase())) return p.toUpperCase();
+            if (!primeira && conectivos.contains(p.toLowerCase())) {
+              return p.toLowerCase();
+            }
+            return _capitalizar(p);
+          },
+          onNonMatch: (s) => s,
+        );
+    }
+  }
 
   static const Set<String> conectivos = {
     'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'com', 'para', 'p/', 'a', 'o',

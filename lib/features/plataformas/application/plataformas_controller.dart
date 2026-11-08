@@ -177,17 +177,35 @@ class PlataformasController extends StateNotifier<EstadoPlataformas> {
     _agendarFaixas(id);
   }
 
-  /// Adiciona uma faixa sem limite (fixa 0, pct 0) à plataforma [id].
+  /// Adiciona uma faixa à plataforma [id].
+  ///
+  /// Se ainda não existe faixa "e acima" (sem limite), a nova é a sem limite.
+  /// Se já existe, a nova entra **antes** dela com teto = maior teto + 50
+  /// (copiando fixo/percentual da sem limite), mantendo uma única faixa aberta.
   void adicionarFaixa(String id) {
     _atualizarFaixas(id, (faixas) {
-      return [
-        ...faixas,
-        FaixaEdicao(
-          precoAte: null,
-          taxaFixa: Decimal.zero,
-          taxaPercentual: Decimal.zero,
-        ),
-      ];
+      final indiceAberta = faixas.indexWhere((f) => f.precoAte == null);
+      if (indiceAberta < 0) {
+        return [
+          ...faixas,
+          FaixaEdicao(
+            precoAte: null,
+            taxaFixa: Decimal.zero,
+            taxaPercentual: Decimal.zero,
+          ),
+        ];
+      }
+      final tetos = faixas.map((f) => f.precoAte).whereType<Decimal>();
+      final maior = tetos.isEmpty
+          ? Decimal.zero
+          : tetos.reduce((a, b) => a > b ? a : b);
+      final aberta = faixas[indiceAberta];
+      final nova = FaixaEdicao(
+        precoAte: maior + Decimal.fromInt(50),
+        taxaFixa: aberta.taxaFixa,
+        taxaPercentual: aberta.taxaPercentual,
+      );
+      return [...faixas]..insert(indiceAberta, nova);
     });
     _agendarFaixas(id);
   }

@@ -63,7 +63,7 @@
 
 ## documento_KpiCard
 - **Arquivo:** `lib/core/widgets/kpi_card.dart`
-- **Responsabilidade:** `KpiCard(label, value, sub?)` — cartão de indicador com
+- **Responsabilidade:** `KpiCard(label, value, sub?, valorNegativo)` (padding 16x18, valor 22/600 tabular; `valorNegativo` pinta de `bad`) — cartão de indicador com
   rótulo, valor em destaque (titleLarge tabular) e subtexto opcional.
 
 ## documento_KpiRow

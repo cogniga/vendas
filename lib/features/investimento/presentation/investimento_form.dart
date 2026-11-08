@@ -8,6 +8,7 @@ import 'package:sales/core/widgets/money_field.dart';
 import 'package:sales/core/widgets/painel_lateral.dart';
 import 'package:sales/core/widgets/text_case_field.dart';
 import 'package:sales/data/repositorios/investimento_repository.dart';
+import 'package:sales/data/repositorios/padrao_nome_provider.dart';
 import 'package:sales/domain/entidades/destino.dart';
 import 'package:sales/domain/entidades/investimento.dart';
 
@@ -101,7 +102,10 @@ class _InvestimentoFormState extends ConsumerState<_InvestimentoForm> {
       id: atual?.id ?? '',
       empresaId: widget.empresaId,
       data: _data,
-      distribuidor: PadraoEscrita.titulo(_distribuidor.text),
+      distribuidor: PadraoEscrita.nome(
+        _distribuidor.text,
+        ref.read(padraoNomeProvider),
+      ),
       valor: _valor ?? Decimal.zero,
       nota: PadraoEscrita.maius(_nota.text),
       destinoId: _destinoId,
@@ -150,7 +154,8 @@ class _InvestimentoFormState extends ConsumerState<_InvestimentoForm> {
             ),
             const SizedBox(height: Espacos.g12),
             TextCaseField(
-              caso: CasoTexto.titulo,
+              caso: CasoTexto.nome,
+              padraoNome: ref.watch(padraoNomeProvider),
               controller: _distribuidor,
               label: 'Distribuidor',
             ),
