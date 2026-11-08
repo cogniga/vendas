@@ -1,5 +1,6 @@
 import 'package:decimal/decimal.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:sales/core/format/formatos.dart';
 import 'package:sales/domain/calculos/decimais.dart';
 import 'package:sales/domain/calculos/pedido.dart';
 import 'package:sales/domain/calculos/produto_venda.dart';
@@ -71,6 +72,111 @@ KpisPainel kpisPainel(
   );
 }
 
+/// Período considerado no painel.
+enum PeriodoPainel { mes, tudo }
+
+/// Pedidos `concluido` dentro do [periodo] (mês de [hoje] ou todo o período).
+List<Pedido> filtrarPedidosPeriodo(
+  List<Pedido> pedidos,
+  PeriodoPainel periodo,
+  DateTime hoje,
+) {
+  return pedidos.where((p) {
+    if (p.situacao != SituacaoPedido.concluido) return false;
+    if (periodo == PeriodoPainel.tudo) return true;
+    return p.data.year == hoje.year && p.data.month == hoje.month;
+  }).toList();
+}
+
+/// Venda agregada de uma plataforma.
+class VendaPlataforma {
+  const VendaPlataforma({
+    required this.plataformaId,
+    required this.bruto,
+    required this.liquido,
+    required this.pedidos,
+  });
+
+  final String plataformaId;
+  final Decimal bruto;
+  final Decimal liquido;
+  final int pedidos;
+}
+
+/// Agrupa [pedidos] por plataforma, na ordem em que aparecem.
+List<VendaPlataforma> vendasPorPlataforma(
+  List<Pedido> pedidos,
+  Map<String, List<FaixaTaxa>> faixasPorPlataforma,
+) {
+  final bruto = <String, Decimal>{};
+  final liquido = <String, Decimal>{};
+  final qtd = <String, int>{};
+  for (final pedido in pedidos) {
+    final faixas = faixasPorPlataforma[pedido.plataformaId] ?? const [];
+    final r = calcularPedido(pedido, faixas);
+    final id = pedido.plataformaId;
+    bruto[id] = (bruto[id] ?? zero) + pedido.precoVenda;
+    liquido[id] = (liquido[id] ?? zero) + r.liquido;
+    qtd[id] = (qtd[id] ?? 0) + 1;
+  }
+  return [
+    for (final id in bruto.keys)
+      VendaPlataforma(
+        plataformaId: id,
+        bruto: bruto[id]!,
+        liquido: liquido[id]!,
+        pedidos: qtd[id]!,
+      ),
+  ];
+}
+
+/// Item mais vendido (nome resolvido e unidades).
+class ItemVendido {
+  const ItemVendido({required this.nome, required this.quantidade});
+
+  final String nome;
+  final int quantidade;
+}
+
+/// Itens mais vendidos: soma `quantidade` das linhas (sem multiplicar kits),
+/// ordenados por unidades desc; empate mantém a ordem de inserção.
+List<ItemVendido> itensMaisVendidos(
+  List<Pedido> pedidos, {
+  Map<String, String> nomesProdutos = const {},
+  Map<String, String> nomesKits = const {},
+  int limite = 6,
+}) {
+  final nomes = <String, String>{};
+  final qtds = <String, int>{};
+  for (final pedido in pedidos) {
+    for (final item in pedido.itens) {
+      final ehKit = item.tipo == TipoPedidoItem.produtoVenda;
+      final ref = (ehKit ? item.produtoVendaId : item.produtoId) ?? '';
+      final chave = '${item.tipo.name}$ref';
+      nomes.putIfAbsent(
+        chave,
+        () => ehKit
+            ? (nomesKits[ref] ?? '(kit removido)')
+            : (nomesProdutos[ref] ?? '(produto removido)'),
+      );
+      qtds[chave] = (qtds[chave] ?? 0) + item.quantidade;
+    }
+  }
+  final chaves = qtds.keys.toList();
+  final ordem = {for (var i = 0; i < chaves.length; i++) chaves[i]: i};
+  chaves.sort((a, b) {
+    final c = qtds[b]!.compareTo(qtds[a]!);
+    return c != 0 ? c : ordem[a]!.compareTo(ordem[b]!);
+  });
+  return [
+    for (final c in chaves.take(limite))
+      ItemVendido(nome: nomes[c]!, quantidade: qtds[c]!),
+  ];
+}
+
+/// Gravidade de um ponto de atenção.
+enum GravidadeAtencao { ruim, atencao }
+
 /// Ponto de atenção do painel (design.md §6.9).
 @freezed
 class PontoAtencao with _$PontoAtencao {
@@ -80,14 +186,15 @@ class PontoAtencao with _$PontoAtencao {
 
     /// Mensagem descritiva.
     required String mensagem,
+
+    /// Gravidade (define a cor do aviso).
+    required GravidadeAtencao gravidade,
   }) = _PontoAtencao;
 }
 
-/// Pontos de atenção do painel (design.md §6.9):
-/// - soma dos destinos != 100%;
-/// - kit com lucro < 0 em alguma plataforma (lista plataformas e mínimo);
-/// - kit com margem < 15% em alguma plataforma;
-/// - códigos de produto repetidos.
+/// Pontos de atenção do painel, com os textos do protótipo.
+///
+/// O alerta de estoque baixo é omitido: o produto não tem estoque mínimo.
 List<PontoAtencao> pontosAtencao({
   required List<Destino> destinos,
   required List<Produto> produtos,
@@ -99,21 +206,21 @@ List<PontoAtencao> pontosAtencao({
 }) {
   final pontos = <PontoAtencao>[];
   final margemMinima = Decimal.parse('0.15');
-
   final somaDestinos = destinos.fold<Decimal>(
     zero,
     (soma, d) => soma + d.percentual,
   );
-  if (somaDestinos != cem) {
+  if ((somaDestinos - cem).abs() > Decimal.parse('0.01')) {
+    final texto = somaDestinos.toString().replaceAll('.', ',');
     pontos.add(
       PontoAtencao(
         tipo: 'destinos',
-        mensagem:
-            'Soma dos destinos é ${somaDestinos.arred2()}%, não 100%.',
+        mensagem: 'Os destinos do caixa somam $texto%. '
+            'Ajuste para 100% em Caixa e saques.',
+        gravidade: GravidadeAtencao.ruim,
       ),
     );
   }
-
   for (final kit in kits) {
     final prejuizo = <String>[];
     final margemBaixa = <String>[];
@@ -128,17 +235,23 @@ List<PontoAtencao> pontosAtencao({
       );
       if (r.lucro < zero) {
         final minimo = precoMinimo(faixas, r.investimento);
-        prejuizo.add('${plataforma.nome} (mín. R\$ ${minimo.arred2()})');
+        prejuizo.add(
+          '${plataforma.nome} (mín. ${Formatos.moedaDecimal(minimo)})',
+        );
       } else if (r.margem < margemMinima) {
-        margemBaixa.add(plataforma.nome);
+        margemBaixa.add(
+          '${plataforma.nome} '
+          '(${Formatos.percentualFracao(r.margem.toDouble())})',
+        );
       }
     }
     if (prejuizo.isNotEmpty) {
       pontos.add(
         PontoAtencao(
           tipo: 'kitPrejuizo',
-          mensagem:
-              '${kit.nome} dá prejuízo em: ${prejuizo.join(', ')}.',
+          mensagem: '\u201c${kit.nome}\u201d dá prejuízo em '
+              '${prejuizo.join(', ')}.',
+          gravidade: GravidadeAtencao.ruim,
         ),
       );
     }
@@ -146,14 +259,13 @@ List<PontoAtencao> pontosAtencao({
       pontos.add(
         PontoAtencao(
           tipo: 'kitMargemBaixa',
-          mensagem:
-              '${kit.nome} com margem < 15% em: '
+          mensagem: '\u201c${kit.nome}\u201d tem margem baixa em '
               '${margemBaixa.join(', ')}.',
+          gravidade: GravidadeAtencao.atencao,
         ),
       );
     }
   }
-
   final contagem = <String, int>{};
   for (final p in produtos) {
     contagem[p.codigo] = (contagem[p.codigo] ?? 0) + 1;
@@ -166,10 +278,11 @@ List<PontoAtencao> pontosAtencao({
     pontos.add(
       PontoAtencao(
         tipo: 'codigoRepetido',
-        mensagem: 'Códigos repetidos: ${repetidos.join(', ')}.',
+        mensagem: 'Códigos repetidos no cadastro: ${repetidos.join(', ')}. '
+            'Cada código deve ser único.',
+        gravidade: GravidadeAtencao.atencao,
       ),
     );
   }
-
   return pontos;
 }

@@ -41,3 +41,34 @@ implementação devem seguir estas decisões.
 - **Fonte:** Plus Jakarta Sans empacotada como asset local (`assets/fonts/`) em
   vez de baixar via `google_fonts` em runtime (removido). Entitlements do macOS
   ganharam `com.apple.security.network.client` (necessário ao Supabase).
+
+## D3 — Conteúdo ancorado ao topo (AppShell._Corpo)
+
+- **Problema:** em todas as telas o conteúdo aparecia centralizado verticalmente
+  quando era menor que a viewport.
+- **Correção:** `AppShell._Corpo` envolve o `child` num `ConstrainedBox`
+  (minHeight = altura disponível − paddings) + `Column(stretch)` dentro do
+  `SingleChildScrollView`, forçando o conteúdo a começar no topo.
+- **Fidelidade visual (tela de Pedidos):** painel único (toolbar + tabela, sem
+  card duplo), `PageHeader` com título à esquerda e ações à direita,
+  `PlatformPill` com bolinha (dot) da cor da plataforma sobre fundo neutro,
+  paddings/alinhamentos da tabela conforme o CSS do protótipo.
+- **Observação sobre build:** validar mudanças visuais exige build limpo
+  (`flutter build macos --debug ...`) e abrir o `.app`, pois `flutter run`
+  reusava processos antigos e mostrava a versão em cache.
+
+## D4 — Faixas de taxa: só o "até" é guardado
+O "de" de cada faixa é calculado (teto anterior + R$ 0,01; 0 na primeira) por `iniciosDasFaixas` em `lib/domain/calculos/taxas.dart`. "Até" vazio (`preco_ate null`) = "e acima". Sem migration; evita buracos e sobreposição entre faixas.
+
+## D5 — Código do produto gerado pelo sistema
+`gerarCodigoProduto` (`lib/domain/calculos/codigo_produto.dart`): 3 letras de até 3 palavras do nome, sem acentos e conectivos ("Batom Matte Vermelho" → `BAT-MAT-VER`); se já existir na empresa, recebe `-2`, `-3`… O campo é somente leitura. Produto novo acompanha o nome; produto existente mantém o código (estável). A unicidade final continua garantida por `unique (empresa_id, codigo)` no banco.
+
+## D6 — Padrão de escrita dos nomes por empresa
+`configuracoes.padrao_nome` (`titulo` | `maiusculas` | `minusculas`, migration 0004). Escolhido em Dados e configurações; lido por `padraoNomeProvider` (`lib/data/repositorios/padrao_nome_provider.dart`, padrão `titulo` se a coluna ainda não existir). `TextCaseField(caso: CasoTexto.nome)` aplica o padrão **enquanto digita** (sem mexer em espaços/cursor) e normaliza ao sair do campo; os formulários reaplicam `PadraoEscrita.nome` ao salvar. Vale para produto (nome, marca, fornecedor), insumo, distribuidor e kit. Nomes já cadastrados não são alterados automaticamente.
+
+## D7 — Painel: alerta "Estoque baixo" omitido
+O protótipo avisa estoque baixo com `estoqueMin`, mas `Produto` não tem essa coluna. O alerta fica fora do painel; para tê-lo é preciso uma migration adicionando `estoque_min` em `produto_online` (não criada sem pedido).
+## D8 — Painel: período e situação dos pedidos
+"Este mês" compara ano e mês de `pedido.data` com hoje; "Todo o período" (padrão) não filtra. Só pedidos `concluido` entram (design §6.5); cancelado e devolvido ficam de fora. O período vive em `periodoPainelProvider`; trocar o período recalcula na hora, sem nova consulta.
+## D9 — Painel: pontos de atenção
+`pontosAtencao` usa os textos do protótipo e uma `GravidadeAtencao` (`ruim` → fundo `badSoft`; `atencao` → `warnSoft`). Destinos fora de 100% (tolerância 0,01) e kit com prejuízo são `ruim`; margem < 15% e códigos repetidos são `atencao`. "Itens mais vendidos" soma a quantidade da linha do pedido (kit não multiplica pelos itens), como o protótipo.

@@ -309,6 +309,9 @@ mixin _$PontoAtencao {
   /// Mensagem descritiva.
   String get mensagem => throw _privateConstructorUsedError;
 
+  /// Gravidade (define a cor do aviso).
+  GravidadeAtencao get gravidade => throw _privateConstructorUsedError;
+
   /// Create a copy of PontoAtencao
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -323,7 +326,7 @@ abstract class $PontoAtencaoCopyWith<$Res> {
     $Res Function(PontoAtencao) then,
   ) = _$PontoAtencaoCopyWithImpl<$Res, PontoAtencao>;
   @useResult
-  $Res call({String tipo, String mensagem});
+  $Res call({String tipo, String mensagem, GravidadeAtencao gravidade});
 }
 
 /// @nodoc
@@ -340,7 +343,11 @@ class _$PontoAtencaoCopyWithImpl<$Res, $Val extends PontoAtencao>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? tipo = null, Object? mensagem = null}) {
+  $Res call({
+    Object? tipo = null,
+    Object? mensagem = null,
+    Object? gravidade = null,
+  }) {
     return _then(
       _value.copyWith(
             tipo: null == tipo
@@ -351,6 +358,10 @@ class _$PontoAtencaoCopyWithImpl<$Res, $Val extends PontoAtencao>
                 ? _value.mensagem
                 : mensagem // ignore: cast_nullable_to_non_nullable
                       as String,
+            gravidade: null == gravidade
+                ? _value.gravidade
+                : gravidade // ignore: cast_nullable_to_non_nullable
+                      as GravidadeAtencao,
           )
           as $Val,
     );
@@ -366,7 +377,7 @@ abstract class _$$PontoAtencaoImplCopyWith<$Res>
   ) = __$$PontoAtencaoImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String tipo, String mensagem});
+  $Res call({String tipo, String mensagem, GravidadeAtencao gravidade});
 }
 
 /// @nodoc
@@ -382,7 +393,11 @@ class __$$PontoAtencaoImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? tipo = null, Object? mensagem = null}) {
+  $Res call({
+    Object? tipo = null,
+    Object? mensagem = null,
+    Object? gravidade = null,
+  }) {
     return _then(
       _$PontoAtencaoImpl(
         tipo: null == tipo
@@ -393,6 +408,10 @@ class __$$PontoAtencaoImplCopyWithImpl<$Res>
             ? _value.mensagem
             : mensagem // ignore: cast_nullable_to_non_nullable
                   as String,
+        gravidade: null == gravidade
+            ? _value.gravidade
+            : gravidade // ignore: cast_nullable_to_non_nullable
+                  as GravidadeAtencao,
       ),
     );
   }
@@ -401,7 +420,11 @@ class __$$PontoAtencaoImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$PontoAtencaoImpl implements _PontoAtencao {
-  const _$PontoAtencaoImpl({required this.tipo, required this.mensagem});
+  const _$PontoAtencaoImpl({
+    required this.tipo,
+    required this.mensagem,
+    required this.gravidade,
+  });
 
   /// Tipo: `destinos`, `kitPrejuizo`, `kitMargemBaixa`, `codigoRepetido`.
   @override
@@ -411,9 +434,13 @@ class _$PontoAtencaoImpl implements _PontoAtencao {
   @override
   final String mensagem;
 
+  /// Gravidade (define a cor do aviso).
+  @override
+  final GravidadeAtencao gravidade;
+
   @override
   String toString() {
-    return 'PontoAtencao(tipo: $tipo, mensagem: $mensagem)';
+    return 'PontoAtencao(tipo: $tipo, mensagem: $mensagem, gravidade: $gravidade)';
   }
 
   @override
@@ -423,11 +450,13 @@ class _$PontoAtencaoImpl implements _PontoAtencao {
             other is _$PontoAtencaoImpl &&
             (identical(other.tipo, tipo) || other.tipo == tipo) &&
             (identical(other.mensagem, mensagem) ||
-                other.mensagem == mensagem));
+                other.mensagem == mensagem) &&
+            (identical(other.gravidade, gravidade) ||
+                other.gravidade == gravidade));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, tipo, mensagem);
+  int get hashCode => Object.hash(runtimeType, tipo, mensagem, gravidade);
 
   /// Create a copy of PontoAtencao
   /// with the given fields replaced by the non-null parameter values.
@@ -442,6 +471,7 @@ abstract class _PontoAtencao implements PontoAtencao {
   const factory _PontoAtencao({
     required final String tipo,
     required final String mensagem,
+    required final GravidadeAtencao gravidade,
   }) = _$PontoAtencaoImpl;
 
   /// Tipo: `destinos`, `kitPrejuizo`, `kitMargemBaixa`, `codigoRepetido`.
@@ -451,6 +481,10 @@ abstract class _PontoAtencao implements PontoAtencao {
   /// Mensagem descritiva.
   @override
   String get mensagem;
+
+  /// Gravidade (define a cor do aviso).
+  @override
+  GravidadeAtencao get gravidade;
 
   /// Create a copy of PontoAtencao
   /// with the given fields replaced by the non-null parameter values.

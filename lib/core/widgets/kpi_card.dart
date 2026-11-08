@@ -7,6 +7,7 @@ class KpiCard extends StatelessWidget {
     required this.label,
     required this.value,
     this.sub,
+    this.valorNegativo = false,
     super.key,
   });
 
@@ -14,13 +15,16 @@ class KpiCard extends StatelessWidget {
   final String value;
   final String? sub;
 
+  /// Pinta o valor com a cor de prejuízo (`bad`).
+  final bool valorNegativo;
+
   @override
   Widget build(BuildContext context) {
     final cores = context.cores;
     final textos = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.all(Espacos.g16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         color: cores.surface,
         borderRadius: BorderRadius.circular(Raios.cartao),
@@ -30,14 +34,33 @@ class KpiCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: textos.labelLarge),
-          const SizedBox(height: Espacos.g8),
-          Text(value, style: textos.titleLarge),
+          Text(
+            label,
+            style: textos.labelLarge?.copyWith(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+              color: cores.muted,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: textos.titleLarge?.copyWith(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.44,
+              color: valorNegativo ? cores.bad : null,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
           if (sub != null) ...[
-            const SizedBox(height: Espacos.base),
+            const SizedBox(height: 6),
             Text(
               sub!,
-              style: textos.bodySmall?.copyWith(color: cores.muted),
+              style: textos.bodySmall?.copyWith(
+                fontSize: 12,
+                color: cores.muted,
+              ),
             ),
           ],
         ],

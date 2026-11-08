@@ -54,7 +54,7 @@ Execute em ordem. Cada tarefa referencia requisitos (R#) e seções do design (�
 
 - [ ] 12. Caixa e saques (R10) — KPIs, cartões por destino, editor de destinos e "por plataforma" com mesma altura, extrato; formulários de saque (rateio ao vivo) e retirada.
 
-- [ ] 13. Painel (R11) — período, KPIs, vendas por plataforma, pontos de atenção, caixa por destino, mais vendidos.
+- [x] 13. Painel (R11) — período, KPIs, vendas por plataforma, pontos de atenção, caixa por destino, mais vendidos.
 
 - [ ] 14. Configurações (R14, R12) — padrões de custo, valor da abelinha, exportar/importar JSON, quadro "Padrão de escrita", sair.
 
