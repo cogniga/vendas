@@ -1,0 +1,1 @@
+{"verdict":"APPROVED","findings":["pedido_editor.dart tem 1316 linhas; extrair picker e lista de itens quando houver oportunidade (não bloqueante)","Comparação visual com 03-pedido-editor.png e teste contra Supabase real não feitos; conferir manualmente (informativo)"],"reviewDoc":"/Users/raquel/Documents/projetos/front/private/sales/.agents/tasks/pedido-editor-fix/review.md"}

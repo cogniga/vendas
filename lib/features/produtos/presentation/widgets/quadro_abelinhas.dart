@@ -180,7 +180,7 @@ class _CampoManualState extends State<_CampoManual> {
   void initState() {
     super.initState();
     _controller = TextEditingController(
-      text: Formatos.numero(widget.valor.toDouble()),
+      text: Formatos.numeroCurto(widget.valor.toDouble()),
     );
   }
 
@@ -194,7 +194,7 @@ class _CampoManualState extends State<_CampoManual> {
     final atual = Formatos.parseDecimal(_controller.text) ?? widget.valor;
     var novo = atual + passo;
     if (novo < Decimal.zero) novo = Decimal.zero;
-    _controller.text = Formatos.numero(novo.toDouble());
+    _controller.text = Formatos.numeroCurto(novo.toDouble());
     widget.aoMudar(novo);
   }
 
@@ -314,7 +314,7 @@ class _AvisoImpacto extends StatelessWidget {
         _linha(
           context,
           'Para o mesmo lucro',
-          'vender ${Formatos.numero(vezes.toDouble())}× mais unidades',
+          'vender ${Formatos.numeroCurto(vezes.toDouble())}× mais unidades',
         ),
       );
     }

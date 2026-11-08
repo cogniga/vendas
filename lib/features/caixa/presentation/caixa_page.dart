@@ -340,7 +340,7 @@ class _SaldoPorDestino extends StatelessWidget {
             const Pill('Rateio fecha 100%', tom: TomPill.bom)
           else
             Pill(
-              'Rateio soma ${Formatos.numero(somaPct.toDouble())}%',
+              'Rateio soma ${Formatos.pontos(somaPct.toDouble())}',
               tom: TomPill.ruim,
             ),
         ],
@@ -411,7 +411,7 @@ class _CartaoDestino extends StatelessWidget {
               ),
               const SizedBox(width: Espacos.g8),
               Expanded(child: Text(destino.nome)),
-              Pill('${Formatos.numero(destino.percentual.toDouble())}%'),
+              Pill(Formatos.pontos(destino.percentual.toDouble())),
             ],
           ),
           const SizedBox(height: Espacos.g8),
@@ -704,17 +704,19 @@ class _Extrato extends StatelessWidget {
                 ColunaLista<Movimento>(
                   label: 'Movimento',
                   principal: true,
+                  // Mais espaço para o nome não quebrar em várias linhas.
+                  flex: 2,
                   builder: (m) => _CelulaMovimento(movimento: m),
                 ),
                 ColunaLista<Movimento>(
                   label: 'Valor',
-                  alinhamento: Alignment.centerRight,
+                  alinhamento: Alignment.center,
                   builder: (m) => _CelulaValor(movimento: m),
                 ),
                 for (final d in dados.destinos)
                   ColunaLista<Movimento>(
                     label: d.nome,
-                    alinhamento: Alignment.centerRight,
+                    alinhamento: Alignment.center,
                     builder: (m) =>
                         _CelulaDestino(movimento: m, destino: d),
                   ),
@@ -773,11 +775,15 @@ class _CelulaValor extends StatelessWidget {
     final cores = context.cores;
     final textos = Theme.of(context).textTheme;
     final negativo = movimento.valor < zero;
-    return Text(
-      Formatos.moedaDecimal(movimento.valor),
-      style: textos.bodyMedium?.copyWith(
-        fontWeight: FontWeight.w600,
-        color: negativo ? cores.bad : cores.good,
+    return _UmaLinha(
+      Text(
+        Formatos.moedaDecimal(movimento.valor),
+        maxLines: 1,
+        softWrap: false,
+        style: textos.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: negativo ? cores.bad : cores.good,
+        ),
       ),
     );
   }
@@ -798,13 +804,29 @@ class _CelulaDestino extends StatelessWidget {
       return Text('—', style: TextStyle(color: cores.muted));
     }
     final negativo = v < zero;
-    return Text(
-      Formatos.moedaDecimal(v),
-      style: textos.bodyMedium?.copyWith(
-        color: negativo ? cores.bad : null,
+    return _UmaLinha(
+      Text(
+        Formatos.moedaDecimal(v),
+        maxLines: 1,
+        softWrap: false,
+        style: textos.bodyMedium?.copyWith(
+          color: negativo ? cores.bad : null,
+        ),
       ),
     );
   }
+}
+
+/// Mantém o valor em uma linha: se a coluna ficar estreita, reduz a fonte em
+/// vez de quebrar "R$ 1.579,70" em duas linhas.
+class _UmaLinha extends StatelessWidget {
+  const _UmaLinha(this.filho);
+
+  final Widget filho;
+
+  @override
+  Widget build(BuildContext context) =>
+      FittedBox(fit: BoxFit.scaleDown, child: filho);
 }
 
 /// Casca de painel: cabeçalho + corpo em cartão de superfície.

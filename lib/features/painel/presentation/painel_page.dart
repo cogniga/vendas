@@ -103,7 +103,23 @@ class _Conteudo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         KpiRow(
+          // Líquido recebido e Lucro são os indicadores principais: vêm
+          // primeiro (sempre juntos na 1ª linha) e em destaque verde (D11).
           cartoes: [
+            KpiCard(
+              label: 'Líquido recebido',
+              value: Formatos.moedaDecimal(k.liquido),
+              sub: 'vai para a carteira',
+              destaque: true,
+              valorNegativo: k.liquido < zero,
+            ),
+            KpiCard(
+              label: 'Lucro',
+              value: Formatos.moedaDecimal(k.lucro),
+              valorNegativo: k.lucro < zero,
+              sub: 'margem ${_pc(k.lucro, k.faturamento)}',
+              destaque: true,
+            ),
             KpiCard(
               label: 'Faturamento',
               value: Formatos.moedaDecimal(k.faturamento),
@@ -115,20 +131,9 @@ class _Conteudo extends StatelessWidget {
               sub: '${_pc(k.taxas, k.faturamento)} do faturamento',
             ),
             KpiCard(
-              label: 'Líquido recebido',
-              value: Formatos.moedaDecimal(k.liquido),
-              sub: 'vai para a carteira',
-            ),
-            KpiCard(
               label: 'Custo dos pedidos',
               value: Formatos.moedaDecimal(k.custo),
               sub: 'produto + embalagem',
-            ),
-            KpiCard(
-              label: 'Lucro',
-              value: Formatos.moedaDecimal(k.lucro),
-              valorNegativo: k.lucro < zero,
-              sub: 'margem ${_pc(k.lucro, k.faturamento)}',
             ),
           ],
         ),

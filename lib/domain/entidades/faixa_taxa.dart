@@ -23,6 +23,12 @@ class FaixaTaxa with _$FaixaTaxa {
     @JsonKey(name: 'preco_ate')
     @DecimalNullableConverter()
     Decimal? precoAte,
+
+    /// Outras taxas em % (ex.: frete do TikTok), somadas a [taxaPercentual].
+    /// Nulo/0 = não cobra (coluna `taxa_outras`, migration 0005).
+    @JsonKey(name: 'taxa_outras')
+    @DecimalNullableConverter()
+    Decimal? taxaOutras,
   }) = _FaixaTaxa;
 
   factory FaixaTaxa.fromJson(Map<String, dynamic> json) =>

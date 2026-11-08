@@ -297,6 +297,7 @@ class _ListaFaixas extends StatelessWidget {
           label: 'Abelinhas',
           builder: (i) => _CampoDecimal(
             valor: analises[i].abelinhas,
+            curto: true,
             aoMudar: (v) => aoAlterarAbelinhas(i, v),
           ),
         ),
@@ -375,7 +376,14 @@ class _CelulaFaixa extends StatelessWidget {
 
 /// Campo numérico (decimal) para editar custo/abelinhas de uma faixa.
 class _CampoDecimal extends StatefulWidget {
-  const _CampoDecimal({required this.valor, required this.aoMudar});
+  const _CampoDecimal({
+    required this.valor,
+    required this.aoMudar,
+    this.curto = false,
+  });
+
+  /// Sem zeros desnecessários (0,5 e 1 em vez de 0,50 e 1,00).
+  final bool curto;
 
   final Decimal valor;
   final ValueChanged<Decimal> aoMudar;
@@ -385,6 +393,10 @@ class _CampoDecimal extends StatefulWidget {
 }
 
 class _CampoDecimalState extends State<_CampoDecimal> {
+  String _formatar(Decimal v) => widget.curto
+      ? Formatos.numeroCurto(v.toDouble())
+      : Formatos.numero(v.toDouble());
+
   late final TextEditingController _controller;
   final FocusNode _foco = FocusNode();
 
@@ -392,7 +404,7 @@ class _CampoDecimalState extends State<_CampoDecimal> {
   void initState() {
     super.initState();
     _controller = TextEditingController(
-      text: Formatos.numero(widget.valor.toDouble()),
+      text: _formatar(widget.valor),
     );
   }
 
@@ -403,7 +415,7 @@ class _CampoDecimalState extends State<_CampoDecimal> {
     // foco se o usuário está digitando.
     final atual = Formatos.parseDecimal(_controller.text);
     if (atual != widget.valor && !_foco.hasFocus) {
-      _controller.text = Formatos.numero(widget.valor.toDouble());
+      _controller.text = _formatar(widget.valor);
     }
   }
 

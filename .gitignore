@@ -46,3 +46,4 @@ app.*.map.json
 
 # Segredos locais (NÃO versionar) — chaves do Supabase
 /env/supabase.json
+/dist

@@ -8,7 +8,9 @@ import 'package:sales/data/repositorios/plataforma_repository.dart';
 import 'package:sales/domain/entidades/faixa_taxa.dart';
 import 'package:sales/domain/entidades/plataforma.dart';
 import 'package:sales/features/composicao/application/composicao_providers.dart'
-    show plataformasComFaixasProvider;
+    as composicao show plataformasComFaixasProvider;
+import 'package:sales/features/pedidos/application/pedidos_providers.dart'
+    as pedidos show plataformasComFaixasProvider;
 import 'package:sales/features/plataformas/application/plataformas_providers.dart';
 
 /// Campos editáveis de uma faixa (em edição na memória).
@@ -17,6 +19,7 @@ class FaixaEdicao {
     required this.precoAte,
     required this.taxaFixa,
     required this.taxaPercentual,
+    this.taxaOutras,
   });
 
   /// `null` significa faixa sem limite superior.
@@ -24,16 +27,22 @@ class FaixaEdicao {
   final Decimal taxaFixa;
   final Decimal taxaPercentual;
 
+  /// Outras taxas em % (ex.: frete do TikTok); `null` = não cobra.
+  final Decimal? taxaOutras;
+
   FaixaEdicao copyWith({
     Object? precoAte = _sentinela,
     Decimal? taxaFixa,
     Decimal? taxaPercentual,
+    Object? taxaOutras = _sentinela,
   }) {
     return FaixaEdicao(
       precoAte:
           precoAte == _sentinela ? this.precoAte : precoAte as Decimal?,
       taxaFixa: taxaFixa ?? this.taxaFixa,
       taxaPercentual: taxaPercentual ?? this.taxaPercentual,
+      taxaOutras:
+          taxaOutras == _sentinela ? this.taxaOutras : taxaOutras as Decimal?,
     );
   }
 
@@ -46,6 +55,7 @@ class FaixaEdicao {
         taxaFixa: taxaFixa,
         taxaPercentual: taxaPercentual,
         precoAte: precoAte,
+        taxaOutras: taxaOutras,
       );
 
   static const Object _sentinela = Object();
@@ -89,7 +99,7 @@ class EstadoPlataformas {
 ///
 /// Nada de Supabase direto: toda I/O passa pelos repositórios via seus
 /// providers. Ao concluir mudanças, invalida [plataformasProvider] e
-/// [plataformasComFaixasProvider] para a composição refletir.
+/// as listas de plataformas com faixas (Composição e Pedidos).
 class PlataformasController extends StateNotifier<EstadoPlataformas> {
   /// Cria o controller com o [Ref] e o mapa inicial carregado do repositório.
   PlataformasController(this._ref, Map<Plataforma, List<FaixaTaxa>> inicial)
@@ -103,6 +113,7 @@ class PlataformasController extends StateNotifier<EstadoPlataformas> {
                       precoAte: f.precoAte,
                       taxaFixa: f.taxaFixa,
                       taxaPercentual: f.taxaPercentual,
+                      taxaOutras: f.taxaOutras,
                     ),
                 ],
             },
@@ -204,6 +215,7 @@ class PlataformasController extends StateNotifier<EstadoPlataformas> {
         precoAte: maior + Decimal.fromInt(50),
         taxaFixa: aberta.taxaFixa,
         taxaPercentual: aberta.taxaPercentual,
+        taxaOutras: aberta.taxaOutras,
       );
       return [...faixas]..insert(indiceAberta, nova);
     });
@@ -301,10 +313,14 @@ class PlataformasController extends StateNotifier<EstadoPlataformas> {
     });
   }
 
+  /// Recarrega TODAS as cópias de "plataformas com faixas": a da Composição
+  /// e a de Pedidos (usada também por Painel e Caixa). Antes só a primeira
+  /// era recarregada e pedidos seguiam com taxas antigas (ex.: sem "Outras").
   void _invalidar() {
     _ref
       ..invalidate(plataformasProvider)
-      ..invalidate(plataformasComFaixasProvider);
+      ..invalidate(composicao.plataformasComFaixasProvider)
+      ..invalidate(pedidos.plataformasComFaixasProvider);
   }
 
   String _mensagem(Object erro) {

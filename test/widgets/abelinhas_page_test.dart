@@ -89,6 +89,6 @@ void main() {
     final campoAbelinhas = tester.widget<TextField>(
       find.byType(TextField).at(8),
     );
-    expect(campoAbelinhas.controller!.text, '2,00');
+    expect(campoAbelinhas.controller!.text, '2');
   });
 }

@@ -90,7 +90,6 @@ class PedidoResumo extends StatelessWidget {
             linhas: [
               for (final l in linhasAbelinhas) LinhaLedger(l.$1, l.$2),
               LinhaLedger('Total de abelinhas', totalAbelinhas, destaque: true),
-              LinhaLedger(rotuloValorAbelinha, valorAbelinhas),
             ],
           ),
           const SizedBox(height: Espacos.g16),
@@ -99,6 +98,9 @@ class PedidoResumo extends StatelessWidget {
             linhas: [
               LinhaLedger('Preço de venda', precoVenda),
               LinhaLedger(rotuloTaxa, taxaEstimada),
+              // Logo abaixo da estimada, para comparar as duas (pedido do
+              // usuário; no protótipo vinha depois do líquido considerado).
+              LinhaLedger('Taxa efetiva', taxaEfetiva),
               LinhaLedger('Líquido estimado', liquidoEstimado),
             ],
           ),
@@ -107,19 +109,18 @@ class PedidoResumo extends StatelessWidget {
             child: Row(
               children: [
                 const Expanded(child: Text('Líquido considerado')),
-                Text(
-                  liquidoConsiderado,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(width: Espacos.g8),
                 Pill(
                   liquidoInformado ? 'informado' : 'estimado',
                   tom: liquidoInformado ? TomPill.bom : TomPill.neutro,
                 ),
+                const SizedBox(width: Espacos.g8),
+                Text(
+                  liquidoConsiderado,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ],
             ),
           ),
-          Ledger(linhas: [LinhaLedger('Taxa efetiva', taxaEfetiva)]),
           _caixaCinza(
             context,
             'Lucro do pedido',

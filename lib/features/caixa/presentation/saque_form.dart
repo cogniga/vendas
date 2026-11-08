@@ -221,7 +221,7 @@ class _PreviewRateio extends StatelessWidget {
                 const SizedBox(width: Espacos.g8),
                 Expanded(child: Text(destinos[i].nome)),
                 Text(
-                  '${Formatos.numero(destinos[i].percentual.toDouble())}%',
+                  Formatos.pontos(destinos[i].percentual.toDouble()),
                   style: textos.bodySmall?.copyWith(color: cores.muted),
                 ),
                 const SizedBox(width: Espacos.g12),
@@ -256,7 +256,7 @@ class _PreviewRateio extends StatelessWidget {
             const SizedBox(height: Espacos.g12),
             Text(
               'Os destinos somam '
-              '${Formatos.numero(somaPct.toDouble())}%: '
+              '${Formatos.pontos(somaPct.toDouble())}: '
               '${Formatos.moedaDecimal(sobra)} ficaria sem destino.',
               style: textos.bodySmall?.copyWith(color: cores.warn),
             ),

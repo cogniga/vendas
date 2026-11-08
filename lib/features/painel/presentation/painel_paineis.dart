@@ -227,8 +227,9 @@ class PainelCaixa extends StatelessWidget {
                         children: [
                           TextSpan(text: '${d.destino.nome} '),
                           TextSpan(
-                            text: '${d.destino.percentual.toString()
-                                .replaceAll('.', ',')}%',
+                            text: Formatos.pontos(
+                              d.destino.percentual.toDouble(),
+                            ),
                             style: TextStyle(color: cores.muted),
                           ),
                         ],

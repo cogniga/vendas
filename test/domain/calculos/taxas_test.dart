@@ -1,6 +1,7 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sales/domain/calculos/taxas.dart';
+import 'package:sales/domain/entidades/faixa_taxa.dart';
 
 import 'plataformas_vetores.dart';
 import 'tolerancia.dart';
@@ -27,6 +28,24 @@ void main() {
       ]);
       expect(iniciosDasFaixas([null]), [Decimal.zero]);
       expect(iniciosDasFaixas([]), isEmpty);
+    });
+
+    test('outras taxas (frete TikTok) somam ao percentual', () {
+      const d = Decimal.parse;
+      final f = FaixaTaxa(
+        id: 'f',
+        empresaId: 'e',
+        plataformaId: 'p',
+        taxaFixa: d('4'),
+        taxaPercentual: d('10'),
+        taxaOutras: d('6'),
+      );
+      // 4 + 100 × (10% + 6%) = 20,00
+      expect(taxa([f], d('100')), d('20'));
+      // Sem outras (nulo) = só o percentual: 4 + 10 = 14,00
+      expect(taxa([f.copyWith(taxaOutras: null)], d('100')), d('14'));
+      // Preço mínimo para custo 12: (12 + 4) / (1 - 0,16) = 19,047…
+      expect(precoMinimo([f], d('12')).round(scale: 2), d('19.05'));
     });
 
     test('faixa sem limite fica por último na ordenação', () {

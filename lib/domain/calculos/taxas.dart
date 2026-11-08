@@ -62,8 +62,13 @@ FaixaTaxa faixa(List<FaixaTaxa> faixas, Decimal preco) {
   return ordenadas.last;
 }
 
+/// Percentual total cobrado na faixa: percentual da plataforma + outras taxas
+/// (ex.: frete do TikTok). Outras nulas contam como 0.
+Decimal percentualTotal(FaixaTaxa f) =>
+    f.taxaPercentual + (f.taxaOutras ?? zero);
+
 /// Taxa cobrada pela plataforma em [preco]:
-/// `taxaFixa * itensTaxaFixa + preco * taxaPercentual / 100`.
+/// `taxaFixa * itensTaxaFixa + preco * (taxaPercentual + taxaOutras) / 100`.
 Decimal taxa(
   List<FaixaTaxa> faixas,
   Decimal preco, {
@@ -71,7 +76,7 @@ Decimal taxa(
 }) {
   final f = faixa(faixas, preco);
   final fixa = f.taxaFixa * Decimal.fromInt(itensTaxaFixa);
-  final percentual = (preco * f.taxaPercentual).dividir(cem);
+  final percentual = (preco * percentualTotal(f)).dividir(cem);
   return fixa + percentual;
 }
 
@@ -85,7 +90,7 @@ Decimal precoMinimo(List<FaixaTaxa> faixas, Decimal custo) {
   final candidatos = <Decimal>[];
   var limiteAnterior = zero;
   for (final f in ordenadas) {
-    final divisor = Decimal.one - f.taxaPercentual.dividir(cem);
+    final divisor = Decimal.one - percentualTotal(f).dividir(cem);
     final p = (custo + f.taxaFixa).dividir(divisor);
     final dentroLimite = f.precoAte == null || p <= f.precoAte!;
     if (p > limiteAnterior && dentroLimite) candidatos.add(p);
@@ -93,7 +98,7 @@ Decimal precoMinimo(List<FaixaTaxa> faixas, Decimal custo) {
   }
   if (candidatos.isEmpty) {
     final primeira = ordenadas.first;
-    final divisor = Decimal.one - primeira.taxaPercentual.dividir(cem);
+    final divisor = Decimal.one - percentualTotal(primeira).dividir(cem);
     return (custo + primeira.taxaFixa).dividir(divisor);
   }
   return candidatos.reduce((a, b) => a < b ? a : b);
@@ -116,7 +121,7 @@ Decimal precoParaMargem(
   final candidatos = <Decimal>[];
   var limiteAnterior = zero;
   for (final f in ordenadas) {
-    final divisor = Decimal.one - f.taxaPercentual.dividir(cem);
+    final divisor = Decimal.one - percentualTotal(f).dividir(cem);
     final grande = (liquidoNecessario + f.taxaFixa).dividir(divisor);
     final dentroLimite = f.precoAte == null || grande <= f.precoAte!;
     if (grande > limiteAnterior && dentroLimite) candidatos.add(grande);
@@ -124,7 +129,7 @@ Decimal precoParaMargem(
   }
   if (candidatos.isEmpty) {
     final primeira = ordenadas.first;
-    final divisor = Decimal.one - primeira.taxaPercentual.dividir(cem);
+    final divisor = Decimal.one - percentualTotal(primeira).dividir(cem);
     return (liquidoNecessario + primeira.taxaFixa).dividir(divisor);
   }
   return candidatos.reduce((a, b) => a < b ? a : b);

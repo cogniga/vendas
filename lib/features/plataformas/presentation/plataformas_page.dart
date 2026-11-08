@@ -410,6 +410,17 @@ class _Faixas extends StatelessWidget {
                 style: textos.bodySmall?.copyWith(color: cores.muted),
               ),
             ),
+            const SizedBox(width: Espacos.g8),
+            Expanded(
+              child: Tooltip(
+                message: 'Outras taxas em %, como o frete do TikTok. '
+                    'Deixe vazio ou 0 se a plataforma não cobra.',
+                child: Text(
+                  'Outras (%)',
+                  style: textos.bodySmall?.copyWith(color: cores.muted),
+                ),
+              ),
+            ),
             const SizedBox(width: 40),
           ],
         ),
@@ -455,11 +466,29 @@ class _Faixas extends StatelessWidget {
                 Expanded(
                   child: _CampoDecimal(
                     key: ValueKey('pct-$plataformaId-$i'),
+                    curto: true,
                     valor: faixas[i].taxaPercentual,
                     aoMudar: (v) => notifier.alterarFaixa(
                       plataformaId,
                       i,
                       faixas[i].copyWith(taxaPercentual: v ?? Decimal.zero),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: Espacos.g8),
+                Expanded(
+                  child: _CampoDecimal(
+                    key: ValueKey('outras-$plataformaId-$i'),
+                    curto: true,
+                    aceitaVazio: true,
+                    dica: '0',
+                    valor: faixas[i].taxaOutras == Decimal.zero
+                        ? null
+                        : faixas[i].taxaOutras,
+                    aoMudar: (v) => notifier.alterarFaixa(
+                      plataformaId,
+                      i,
+                      faixas[i].copyWith(taxaOutras: v),
                     ),
                   ),
                 ),
@@ -732,8 +761,12 @@ class _CampoDecimal extends StatefulWidget {
     required this.aoMudar,
     this.aceitaVazio = false,
     this.dica,
+    this.curto = false,
     super.key,
   });
+
+  /// Sem zeros desnecessários (percentual: 10 em vez de 10,00).
+  final bool curto;
 
   final Decimal? valor;
   final ValueChanged<Decimal?> aoMudar;
@@ -764,7 +797,11 @@ class _CampoDecimalState extends State<_CampoDecimal> {
   }
 
   String _formatar(Decimal? valor) =>
-      valor == null ? '' : Formatos.numero(valor.toDouble());
+      valor == null
+          ? ''
+          : widget.curto
+              ? Formatos.numeroCurto(valor.toDouble())
+              : Formatos.numero(valor.toDouble());
 
   @override
   void dispose() {

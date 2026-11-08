@@ -98,9 +98,9 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
   @override
   void initState() {
     super.initState();
-    _margemCtrl.text = Formatos.numero(_margemAlvo.toDouble());
+    _margemCtrl.text = Formatos.numeroCurto(_margemAlvo.toDouble());
     _metaLucroCtrl.text = Formatos.numero(_metaLucro.toDouble());
-    _fatiaCtrl.text = Formatos.numero(_fatiaRoas.toDouble());
+    _fatiaCtrl.text = Formatos.numeroCurto(_fatiaRoas.toDouble());
   }
 
   @override
@@ -130,9 +130,9 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
     _margemAlvo = kit.margemAlvo;
     _metaLucro = kit.metaLucro;
     _fatiaRoas = kit.fatiaRoas;
-    _margemCtrl.text = Formatos.numero(_margemAlvo.toDouble());
+    _margemCtrl.text = Formatos.numeroCurto(_margemAlvo.toDouble());
     _metaLucroCtrl.text = Formatos.numero(_metaLucro.toDouble());
-    _fatiaCtrl.text = Formatos.numero(_fatiaRoas.toDouble());
+    _fatiaCtrl.text = Formatos.numeroCurto(_fatiaRoas.toDouble());
     for (final i in kit.itens) {
       _itens.add(_LinhaItem(produtoId: i.produtoId, quantidade: i.quantidade));
     }
@@ -881,7 +881,7 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
         val(
           r.roasAlvo == null
               ? '—'
-              : Formatos.numero(r.roasAlvo!.toDouble()),
+              : Formatos.numeroCurto(r.roasAlvo!.toDouble()),
         ),
       ],
     );
@@ -958,7 +958,7 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
             Text(
               r.roasAlvo == null
                   ? '—'
-                  : Formatos.numero(r.roasAlvo!.toDouble()),
+                  : Formatos.numeroCurto(r.roasAlvo!.toDouble()),
             ),
           ),
         ],
@@ -1007,7 +1007,7 @@ class _KitEditorState extends ConsumerState<_KitEditor> {
       child: BotaoPequeno(
         rotulo: Formatos.moedaDecimal(sugerido),
         tooltip: 'Preço para '
-            '${Formatos.numero(_margemAlvo.toDouble())}% de margem',
+            '${Formatos.pontos(_margemAlvo.toDouble())} de margem',
         onPressed: () => _usarSugerido(platId, sugerido),
       ),
     );

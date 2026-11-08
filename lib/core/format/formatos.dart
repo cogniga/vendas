@@ -12,6 +12,8 @@ class Formatos {
       NumberFormat.currency(locale: 'pt_BR', symbol: r'R$');
   static final NumberFormat _numero2 =
       NumberFormat('#,##0.00', 'pt_BR');
+  static final NumberFormat _numeroCurto =
+      NumberFormat('#,##0.##', 'pt_BR');
   static final NumberFormat _percent1 =
       NumberFormat('#,##0.0', 'pt_BR');
   static final DateFormat _data = DateFormat('dd/MM/yyyy', 'pt_BR');
@@ -42,8 +44,15 @@ class Formatos {
     return '$texto 🐝';
   }
 
-  /// Número com 2 casas no padrão brasileiro, sem símbolo.
+  /// Número com 2 casas no padrão brasileiro, sem símbolo (valores em R$).
   static String numero(num valor) => _numero2.format(valor);
+
+  /// Número com até 2 casas, sem zeros desnecessários: 10 → "10",
+  /// 12.5 → "12,5", 33.33 → "33,33". Usado em percentuais e quantidades.
+  static String numeroCurto(num valor) => _numeroCurto.format(valor);
+
+  /// Percentual digitado/configurado em pontos (20 = 20%): "20%", "12,5%".
+  static String pontos(num valor) => '${numeroCurto(valor)}%';
 
   /// Converte texto digitado (com vírgula ou ponto) em [double].
   ///

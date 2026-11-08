@@ -8,6 +8,7 @@ class KpiCard extends StatelessWidget {
     required this.value,
     this.sub,
     this.valorNegativo = false,
+    this.destaque = false,
     super.key,
   });
 
@@ -18,17 +19,30 @@ class KpiCard extends StatelessWidget {
   /// Pinta o valor com a cor de prejuízo (`bad`).
   final bool valorNegativo;
 
+  /// Cartão em destaque (verde: fundo `goodSoft`, borda e valor `good`).
+  /// Com [valorNegativo], o destaque fica vermelho (`badSoft`/`bad`) para não
+  /// mostrar prejuízo em verde.
+  final bool destaque;
+
   @override
   Widget build(BuildContext context) {
     final cores = context.cores;
     final textos = Theme.of(context).textTheme;
+    final corDestaque = valorNegativo ? cores.bad : cores.good;
+    final corValor = destaque
+        ? corDestaque
+        : (valorNegativo ? cores.bad : null);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        color: cores.surface,
+        color: destaque
+            ? (valorNegativo ? cores.badSoft : cores.goodSoft)
+            : cores.surface,
         borderRadius: BorderRadius.circular(Raios.cartao),
-        border: Border.all(color: cores.line),
+        border: Border.all(
+          color: destaque ? corDestaque.withValues(alpha: 0.35) : cores.line,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,8 +52,8 @@ class KpiCard extends StatelessWidget {
             label,
             style: textos.labelLarge?.copyWith(
               fontSize: 12.5,
-              fontWeight: FontWeight.w500,
-              color: cores.muted,
+              fontWeight: destaque ? FontWeight.w600 : FontWeight.w500,
+              color: destaque ? corDestaque : cores.muted,
             ),
           ),
           const SizedBox(height: 6),
@@ -49,7 +63,7 @@ class KpiCard extends StatelessWidget {
               fontSize: 22,
               fontWeight: FontWeight.w600,
               letterSpacing: -0.44,
-              color: valorNegativo ? cores.bad : null,
+              color: corValor,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),

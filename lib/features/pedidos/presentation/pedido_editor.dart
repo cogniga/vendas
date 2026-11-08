@@ -850,8 +850,11 @@ class _PedidoFormState extends ConsumerState<_PedidoForm> {
     final fixo = pedido.itensTaxaFixa > 1
         ? '${Formatos.moedaDecimal(f.taxaFixa)} × ${pedido.itensTaxaFixa}'
         : Formatos.moedaDecimal(f.taxaFixa);
+    final outras = f.taxaOutras ?? Decimal.zero;
     final rotuloTaxa = 'Taxa estimada ${plataforma.nome} '
-        '(${_pct(f.taxaPercentual)}% + $fixo)';
+        '(${_pct(f.taxaPercentual)}%'
+        '${outras > Decimal.zero ? ' + ${_pct(outras)}% outras' : ''}'
+        ' + $fixo)';
 
     final linhasAb = <(String, String)>[
       if (semItens)
@@ -913,12 +916,7 @@ class _PedidoFormState extends ConsumerState<_PedidoForm> {
     );
   }
 
-  String _pct(Decimal d) {
-    final v = d.toDouble();
-    return v == v.roundToDouble()
-        ? v.toStringAsFixed(0)
-        : Formatos.numero(v);
-  }
+  String _pct(Decimal d) => Formatos.numeroCurto(d.toDouble());
 
   // ----------------------------------------------------------------- lógica
 

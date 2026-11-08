@@ -78,3 +78,9 @@ Flutter 3.35 junta, por padrão, a thread de UI com a da plataforma no macOS (lo
 
 ## D10 — Pedido: rótulos de status e itens do editor
 O banco guarda `pedidos.situacao` como `concluido | cancelado | devolvido` (check constraint), então o enum `SituacaoPedido` não muda e não há migration. O editor exibe `concluido` = "Pago", `devolvido` = "Devolvido" e `cancelado` = "Cancelado". "Enviado" e "Entregue" do protótipo não são persistíveis: exigiriam uma migration alterando o check de `pedidos.situacao` (e o enum), por isso ficam fora. Ao editar, o editor busca o pedido completo (`pedidoCompletoProvider` → `obterComItens`) e só monta o formulário depois; itens já gravados mantêm o snapshot de custo e abelinhas (inclusive quando o produto/kit não existe mais). `PedidoRepository.listar` agora traz os itens (lista, painel e caixa).
+
+## D11 — Painel: Líquido recebido e Lucro em destaque
+Pedido do usuário (diverge do protótipo): os KPIs "Líquido recebido" e "Lucro" vêm primeiro e lado a lado, com `KpiCard(destaque: true)` — fundo `goodSoft`, borda e valor `good`. Se o valor for negativo, o destaque fica vermelho (`badSoft`/`bad`) para não exibir prejuízo em verde. Ordem: Líquido, Lucro, Faturamento, Taxas, Custo.
+
+## D12 — Outras taxas (%) por faixa de taxa
+Coluna `faixas_taxa.taxa_outras numeric(6,2) default 0` (migration 0005), editada como "Outras (%)" em cada faixa de Plataformas e taxas (ex.: taxa de frete percentual do TikTok). Todos os cálculos usam `percentualTotal(f) = taxaPercentual + taxaOutras` (`lib/domain/calculos/taxas.dart`): taxa, líquido, preço mínimo e preço para margem. Vazio/0 = não cobra. O repositório só envia a coluna quando há valor, para não quebrar antes da migration.

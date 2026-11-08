@@ -16,6 +16,9 @@ _$FaixaTaxaImpl _$$FaixaTaxaImplFromJson(Map<String, dynamic> json) =>
         json['taxa_percentual'] as Object,
       ),
       precoAte: const DecimalNullableConverter().fromJson(json['preco_ate']),
+      taxaOutras: const DecimalNullableConverter().fromJson(
+        json['taxa_outras'],
+      ),
     );
 
 Map<String, dynamic> _$$FaixaTaxaImplToJson(
@@ -27,4 +30,5 @@ Map<String, dynamic> _$$FaixaTaxaImplToJson(
   'taxa_fixa': const DecimalConverter().toJson(instance.taxaFixa),
   'taxa_percentual': const DecimalConverter().toJson(instance.taxaPercentual),
   'preco_ate': const DecimalNullableConverter().toJson(instance.precoAte),
+  'taxa_outras': const DecimalNullableConverter().toJson(instance.taxaOutras),
 };

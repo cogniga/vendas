@@ -21,6 +21,20 @@ void main() {
     });
   });
 
+  group('Formatos.numeroCurto / pontos', () {
+    test('sem zeros desnecessários', () {
+      expect(Formatos.numeroCurto(10), '10');
+      expect(Formatos.numeroCurto(12.5), '12,5');
+      expect(Formatos.numeroCurto(33.33), '33,33');
+      expect(Formatos.numeroCurto(1500), '1.500');
+    });
+    test('percentual em pontos', () {
+      expect(Formatos.pontos(30), '30%');
+      expect(Formatos.pontos(100), '100%');
+      expect(Formatos.pontos(12.5), '12,5%');
+    });
+  });
+
   group('Formatos.abelinhas', () {
     test('inteiro sem casas decimais', () {
       expect(Formatos.abelinhas(1), '1 🐝');

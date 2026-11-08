@@ -9,7 +9,11 @@ class ColunaLista<T> {
     this.alinhamento,
     this.principal = false,
     this.cabecalho,
+    this.flex = 1,
   });
+
+  /// Peso da largura da coluna no modo tabela (2 = o dobro das demais).
+  final int flex;
 
   /// Rótulo do cabeçalho (tabela) e rótulo do par rótulo/valor (cartão).
   final String label;
@@ -87,6 +91,7 @@ class _Tabela<T> extends StatelessWidget {
 
     Widget celula(ColunaLista<T> c, Widget filho) {
       return Expanded(
+        flex: c.flex,
         child: Padding(
           // Respiro entre colunas vizinhas, para valores à direita não
           // encostarem no texto da coluna seguinte à esquerda.
@@ -112,7 +117,24 @@ class _Tabela<T> extends StatelessWidget {
               for (final c in lista.colunas)
                 celula(
                   c,
-                  c.cabecalho ?? Text(c.label, style: textos.labelLarge),
+                  // Título sempre em uma linha: se não couber, reduz a fonte
+                  // (scaleDown) em vez de quebrar a palavra; o nome inteiro
+                  // aparece no tooltip.
+                  // (Cabeçalho customizado cuida do próprio encolhimento.)
+                  c.cabecalho ??
+                      Tooltip(
+                        message: c.label,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: c.alinhamento ?? Alignment.centerLeft,
+                          child: Text(
+                            c.label,
+                            maxLines: 1,
+                            softWrap: false,
+                            style: textos.labelLarge,
+                          ),
+                        ),
+                      ),
                 ),
               if (lista.acoes != null)
                 const SizedBox(width: 120, child: SizedBox.shrink()),

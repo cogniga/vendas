@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sales/core/config/supabase_config.dart';
 import 'package:sales/data/repositorios/erros_repositorio.dart';
@@ -107,6 +108,10 @@ class PlataformaRepository {
           'preco_ate': f.precoAte?.toString(),
           'taxa_fixa': f.taxaFixa.toString(),
           'taxa_percentual': f.taxaPercentual.toString(),
+          // Só envia quando há valor: sem a migration 0005, gravar faixas
+          // sem "outras" continua funcionando.
+          if (f.taxaOutras != null && f.taxaOutras! > Decimal.zero)
+            'taxa_outras': f.taxaOutras.toString(),
         },
     ]);
   }

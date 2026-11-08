@@ -133,8 +133,8 @@ class _DestinosPanelState extends ConsumerState<DestinosPanel> {
                 ),
                 Pill(
                   fechou
-                      ? '${Formatos.numero(somaPct.toDouble())}%'
-                      : '${Formatos.numero(somaPct.toDouble())}% · '
+                      ? Formatos.pontos(somaPct.toDouble())
+                      : '${Formatos.pontos(somaPct.toDouble())} · '
                           'precisa somar 100%',
                   tom: fechou ? TomPill.bom : TomPill.ruim,
                 ),
@@ -276,7 +276,7 @@ class _LinhaDestinoState extends State<_LinhaDestino> {
     super.initState();
     _nome = TextEditingController(text: widget.nome);
     _pct = TextEditingController(
-      text: Formatos.numero(widget.percentual.toDouble()),
+      text: Formatos.numeroCurto(widget.percentual.toDouble()),
     );
   }
 

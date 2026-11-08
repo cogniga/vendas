@@ -36,6 +36,12 @@ mixin _$FaixaTaxa {
   @DecimalNullableConverter()
   Decimal? get precoAte => throw _privateConstructorUsedError;
 
+  /// Outras taxas em % (ex.: frete do TikTok), somadas a [taxaPercentual].
+  /// Nulo/0 = não cobra (coluna `taxa_outras`, migration 0005).
+  @JsonKey(name: 'taxa_outras')
+  @DecimalNullableConverter()
+  Decimal? get taxaOutras => throw _privateConstructorUsedError;
+
   /// Serializes this FaixaTaxa to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -60,6 +66,9 @@ abstract class $FaixaTaxaCopyWith<$Res> {
     @DecimalConverter()
     Decimal taxaPercentual,
     @JsonKey(name: 'preco_ate') @DecimalNullableConverter() Decimal? precoAte,
+    @JsonKey(name: 'taxa_outras')
+    @DecimalNullableConverter()
+    Decimal? taxaOutras,
   });
 }
 
@@ -84,6 +93,7 @@ class _$FaixaTaxaCopyWithImpl<$Res, $Val extends FaixaTaxa>
     Object? taxaFixa = null,
     Object? taxaPercentual = null,
     Object? precoAte = freezed,
+    Object? taxaOutras = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -111,6 +121,10 @@ class _$FaixaTaxaCopyWithImpl<$Res, $Val extends FaixaTaxa>
                 ? _value.precoAte
                 : precoAte // ignore: cast_nullable_to_non_nullable
                       as Decimal?,
+            taxaOutras: freezed == taxaOutras
+                ? _value.taxaOutras
+                : taxaOutras // ignore: cast_nullable_to_non_nullable
+                      as Decimal?,
           )
           as $Val,
     );
@@ -135,6 +149,9 @@ abstract class _$$FaixaTaxaImplCopyWith<$Res>
     @DecimalConverter()
     Decimal taxaPercentual,
     @JsonKey(name: 'preco_ate') @DecimalNullableConverter() Decimal? precoAte,
+    @JsonKey(name: 'taxa_outras')
+    @DecimalNullableConverter()
+    Decimal? taxaOutras,
   });
 }
 
@@ -158,6 +175,7 @@ class __$$FaixaTaxaImplCopyWithImpl<$Res>
     Object? taxaFixa = null,
     Object? taxaPercentual = null,
     Object? precoAte = freezed,
+    Object? taxaOutras = freezed,
   }) {
     return _then(
       _$FaixaTaxaImpl(
@@ -185,6 +203,10 @@ class __$$FaixaTaxaImplCopyWithImpl<$Res>
             ? _value.precoAte
             : precoAte // ignore: cast_nullable_to_non_nullable
                   as Decimal?,
+        taxaOutras: freezed == taxaOutras
+            ? _value.taxaOutras
+            : taxaOutras // ignore: cast_nullable_to_non_nullable
+                  as Decimal?,
       ),
     );
   }
@@ -202,6 +224,7 @@ class _$FaixaTaxaImpl implements _FaixaTaxa {
     @DecimalConverter()
     required this.taxaPercentual,
     @JsonKey(name: 'preco_ate') @DecimalNullableConverter() this.precoAte,
+    @JsonKey(name: 'taxa_outras') @DecimalNullableConverter() this.taxaOutras,
   });
 
   factory _$FaixaTaxaImpl.fromJson(Map<String, dynamic> json) =>
@@ -228,9 +251,16 @@ class _$FaixaTaxaImpl implements _FaixaTaxa {
   @DecimalNullableConverter()
   final Decimal? precoAte;
 
+  /// Outras taxas em % (ex.: frete do TikTok), somadas a [taxaPercentual].
+  /// Nulo/0 = não cobra (coluna `taxa_outras`, migration 0005).
+  @override
+  @JsonKey(name: 'taxa_outras')
+  @DecimalNullableConverter()
+  final Decimal? taxaOutras;
+
   @override
   String toString() {
-    return 'FaixaTaxa(id: $id, empresaId: $empresaId, plataformaId: $plataformaId, taxaFixa: $taxaFixa, taxaPercentual: $taxaPercentual, precoAte: $precoAte)';
+    return 'FaixaTaxa(id: $id, empresaId: $empresaId, plataformaId: $plataformaId, taxaFixa: $taxaFixa, taxaPercentual: $taxaPercentual, precoAte: $precoAte, taxaOutras: $taxaOutras)';
   }
 
   @override
@@ -248,7 +278,9 @@ class _$FaixaTaxaImpl implements _FaixaTaxa {
             (identical(other.taxaPercentual, taxaPercentual) ||
                 other.taxaPercentual == taxaPercentual) &&
             (identical(other.precoAte, precoAte) ||
-                other.precoAte == precoAte));
+                other.precoAte == precoAte) &&
+            (identical(other.taxaOutras, taxaOutras) ||
+                other.taxaOutras == taxaOutras));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -261,6 +293,7 @@ class _$FaixaTaxaImpl implements _FaixaTaxa {
     taxaFixa,
     taxaPercentual,
     precoAte,
+    taxaOutras,
   );
 
   /// Create a copy of FaixaTaxa
@@ -291,6 +324,9 @@ abstract class _FaixaTaxa implements FaixaTaxa {
     @JsonKey(name: 'preco_ate')
     @DecimalNullableConverter()
     final Decimal? precoAte,
+    @JsonKey(name: 'taxa_outras')
+    @DecimalNullableConverter()
+    final Decimal? taxaOutras,
   }) = _$FaixaTaxaImpl;
 
   factory _FaixaTaxa.fromJson(Map<String, dynamic> json) =
@@ -316,6 +352,13 @@ abstract class _FaixaTaxa implements FaixaTaxa {
   @JsonKey(name: 'preco_ate')
   @DecimalNullableConverter()
   Decimal? get precoAte;
+
+  /// Outras taxas em % (ex.: frete do TikTok), somadas a [taxaPercentual].
+  /// Nulo/0 = não cobra (coluna `taxa_outras`, migration 0005).
+  @override
+  @JsonKey(name: 'taxa_outras')
+  @DecimalNullableConverter()
+  Decimal? get taxaOutras;
 
   /// Create a copy of FaixaTaxa
   /// with the given fields replaced by the non-null parameter values.
