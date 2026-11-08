@@ -22,7 +22,21 @@ class PedidoRepository {
         .select()
         .eq('empresa_id', empresaId)
         .order('data', ascending: false);
-    return linhas.map(Pedido.fromJson).toList();
+    final linhasItens = await _client
+        .from('pedidos_itens')
+        .select()
+        .eq('empresa_id', empresaId);
+    final porPedido = <String, List<PedidoItem>>{};
+    for (final l in linhasItens) {
+      final item = PedidoItem.fromJson(l);
+      porPedido.putIfAbsent(item.pedidoId, () => []).add(item);
+    }
+    return [
+      for (final l in linhas)
+        Pedido.fromJson(l).copyWith(
+          itens: porPedido[l['id'] as String] ?? const [],
+        ),
+    ];
   }
 
   /// Obtém o pedido [id] com seus itens, ou `null` se não existir.
@@ -46,6 +60,8 @@ class PedidoRepository {
   ///
   /// Grava a linha `pedidos` e substitui `pedidos_itens` (delete + insert),
   /// preservando os snapshots já definidos em cada item.
+  /// Atenção: `pedido.itens` precisa estar completo (carregado), pois os
+  /// itens existentes são substituídos por essa lista.
   Future<Pedido> salvar(Pedido pedido) async {
     final linha = await _client
         .from('pedidos')

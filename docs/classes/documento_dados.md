@@ -118,10 +118,13 @@
 ## documento_PedidoRepository
 - **Arquivo:** `lib/data/repositorios/pedido_repository.dart`
 - **Responsabilidade:** `listar(String empresaId) → Future<List<Pedido>>`
-  (order `data` desc); `obterComItens(String id) → Future<Pedido?>`;
+  (order `data` desc; **traz os itens**: uma consulta extra em
+  `pedidos_itens` por `empresa_id`, agrupada por `pedido_id`);
+  `obterComItens(String id) → Future<Pedido?>`;
   `salvar(Pedido) → Future<Pedido>` (upsert `pedidos` + substitui
   `pedidos_itens` gravando os snapshots `custo_unitario`/`abelinhas_unitarias`
-  de cada item — **não** recalcula aqui, o chamador define o snapshot);
+  de cada item — **não** recalcula aqui, o chamador define o snapshot;
+  `pedido.itens` precisa estar completo, pois substitui os itens gravados);
   `excluir(String id) → Future<void>`.
 - **Provider:** `pedidoRepositoryProvider`.
 

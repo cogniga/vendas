@@ -1,15 +1,22 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:sales/core/format/formatos.dart';
 import 'package:sales/core/format/padrao_escrita.dart';
 import 'package:sales/core/theme/tokens.dart';
+import 'package:sales/core/widgets/botao_pequeno.dart';
+import 'package:sales/core/widgets/code_chip.dart';
+import 'package:sales/core/widgets/money_field.dart';
+import 'package:sales/core/widgets/painel_card.dart';
+import 'package:sales/core/widgets/pill.dart';
 import 'package:sales/data/repositorios/empresa_atual_provider.dart';
 import 'package:sales/data/repositorios/pedido_repository.dart';
 import 'package:sales/domain/calculos/abelinhas.dart';
 import 'package:sales/domain/calculos/pedido.dart';
 import 'package:sales/domain/calculos/produto_venda.dart';
+import 'package:sales/domain/calculos/taxas.dart';
 import 'package:sales/domain/entidades/enums.dart';
 import 'package:sales/domain/entidades/faixa_taxa.dart';
 import 'package:sales/domain/entidades/pedido.dart';
@@ -18,43 +25,133 @@ import 'package:sales/domain/entidades/plataforma.dart';
 import 'package:sales/domain/entidades/produto.dart';
 import 'package:sales/domain/entidades/produto_venda.dart';
 import 'package:sales/features/pedidos/application/pedidos_providers.dart';
+import 'package:sales/features/pedidos/presentation/pedido_resumo.dart';
+
+/// Largura mínima do corpo para exibir as duas colunas (protótipo: 860).
+const double _limiarDuasColunas = 860;
+
+/// Largura abaixo da qual o editor ocupa a tela toda.
+const double _limiarTelaCheia = 760;
+
+/// Rótulo exibido para cada situação (D10 em `docs/decisoes.md`).
+String rotuloSituacao(SituacaoPedido s) => switch (s) {
+      SituacaoPedido.concluido => 'Pago',
+      SituacaoPedido.devolvido => 'Devolvido',
+      SituacaoPedido.cancelado => 'Cancelado',
+    };
 
 /// Uma linha em edição no pedido (produto avulso ou kit) com quantidade.
+///
+/// [original] guarda o item já gravado: seu snapshot de custo e abelinhas é
+/// preservado ao salvar, mesmo que o produto/kit tenha mudado ou sumido.
 class _LinhaEdicao {
   _LinhaEdicao({
     required this.ehKit,
     required this.refId,
     required this.quantidade,
+    this.original,
   });
 
   final bool ehKit;
   final String refId;
   int quantidade;
+  final PedidoItem? original;
 }
 
-/// Editor de pedido (R5) em painel lateral largo (design §4).
+/// Custo e abelinhas unitários de uma linha.
+typedef _Snapshot = ({Decimal custo, Decimal abelinhas});
+
+/// Editor de pedido (R5) em painel largo, fiel ao protótipo.
 ///
-/// Recebe [pedido] para edição ou `null` para um novo. Fecha com
-/// `Navigator.pop(context, true)` quando salva.
-class PedidoEditor extends ConsumerStatefulWidget {
+/// Recebe [pedido] para edição ou `null` para um novo. Ao editar, busca o
+/// pedido completo (com itens) antes de montar o formulário, então nunca
+/// depende de a lista estar completa. Fecha com `Navigator.pop(context,
+/// true)` quando salva.
+class PedidoEditor extends ConsumerWidget {
   const PedidoEditor({this.pedido, super.key});
 
   final Pedido? pedido;
 
   @override
-  ConsumerState<PedidoEditor> createState() => _PedidoEditorState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final id = pedido?.id;
+    final dadosAsync = ref.watch(dadosEdicaoPedidoProvider);
+    final completoAsync =
+        id == null ? null : ref.watch(pedidoCompletoProvider(id));
+    final titulo = id == null ? 'Novo pedido' : 'Pedido';
+    void fechar() => Navigator.of(context).pop(false);
+
+    if (dadosAsync.hasError || (completoAsync?.hasError ?? false)) {
+      return _Casca(
+        titulo: titulo,
+        aoFechar: fechar,
+        corpo: _Mensagem(
+          texto: 'Não foi possível carregar os dados do pedido.',
+          acao: 'Tentar de novo',
+          aoAcionar: () {
+            ref.invalidate(dadosEdicaoPedidoProvider);
+            if (id != null) ref.invalidate(pedidoCompletoProvider(id));
+          },
+        ),
+      );
+    }
+    final dados = dadosAsync.valueOrNull;
+    final completo = completoAsync?.valueOrNull;
+    if (dados == null || (id != null && completoAsync!.isLoading)) {
+      return _Casca(
+        titulo: titulo,
+        aoFechar: fechar,
+        corpo: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (id != null && completo == null) {
+      return _Casca(
+        titulo: titulo,
+        aoFechar: fechar,
+        corpo: const _Mensagem(texto: 'Este pedido não existe mais.'),
+      );
+    }
+    if (dados.plataformas.isEmpty) {
+      return _Casca(
+        titulo: titulo,
+        aoFechar: fechar,
+        corpo: const _Mensagem(
+          texto: 'Cadastre ao menos uma plataforma em "Plataformas e taxas" '
+              'antes de lançar um pedido.',
+        ),
+      );
+    }
+    return _PedidoForm(
+      key: ValueKey(id ?? 'novo'),
+      dados: dados,
+      inicial: completo,
+    );
+  }
 }
 
-class _PedidoEditorState extends ConsumerState<PedidoEditor> {
+class _PedidoForm extends ConsumerStatefulWidget {
+  const _PedidoForm({required this.dados, required this.inicial, super.key});
+
+  final DadosEdicaoPedido dados;
+  final Pedido? inicial;
+
+  @override
+  ConsumerState<_PedidoForm> createState() => _PedidoFormState();
+}
+
+class _PedidoFormState extends ConsumerState<_PedidoForm> {
   final _clienteCtrl = TextEditingController();
   final _obsCtrl = TextEditingController();
   final _precoCtrl = TextEditingController();
   final _liquidoCtrl = TextEditingController();
-  final _itensTaxaCtrl = TextEditingController();
+  final _itensTaxaCtrl = TextEditingController(text: '1');
+  final _embalagemCtrl = TextEditingController();
+  final _impressaoCtrl = TextEditingController();
+  final _outrosCtrl = TextEditingController();
   final _buscaCtrl = TextEditingController();
 
   DateTime _data = DateTime.now();
-  String? _plataformaId;
+  late String _plataformaId;
   SituacaoPedido _situacao = SituacaoPedido.concluido;
   final List<_LinhaEdicao> _linhas = [];
 
@@ -74,13 +171,24 @@ class _PedidoEditorState extends ConsumerState<PedidoEditor> {
   bool _salvando = false;
   String _busca = '';
 
+  /// Cache do cálculo dos kits (o custo não depende do que o usuário digita).
+  final Map<String, ResultadoKit> _kitCalc = {};
+
+  DadosEdicaoPedido get _dados => widget.dados;
+
   @override
   void initState() {
     super.initState();
-    final p = widget.pedido;
-    if (p != null) {
+    final p = widget.inicial;
+    _plataformaId = _dados.plataformas.keys.first.id;
+    if (p == null) {
+      _embalagem = _dados.configuracoes?.embalagemPadrao ?? Decimal.zero;
+      _impressao = _dados.configuracoes?.impressaoPadrao ?? Decimal.zero;
+    } else {
       _data = p.data;
-      _plataformaId = p.plataformaId;
+      if (_dados.plataformas.keys.any((x) => x.id == p.plataformaId)) {
+        _plataformaId = p.plataformaId;
+      }
       _situacao = p.situacao;
       _clienteCtrl.text = p.cliente;
       _obsCtrl.text = p.obs;
@@ -90,11 +198,10 @@ class _PedidoEditorState extends ConsumerState<PedidoEditor> {
       _precoVenda = p.precoVenda;
       _liquidoInformado = p.liquidoInformado;
       _itensTaxaFixa = p.itensTaxaFixa;
-      _precoCtrl.text = Formatos.numero(p.precoVenda.toDouble());
       _itensTaxaCtrl.text = '${p.itensTaxaFixa}';
-      if (p.liquidoInformado != null) {
-        _liquidoCtrl.text = Formatos.numero(p.liquidoInformado!.toDouble());
-      }
+      _precoCtrl.text = _texto(p.precoVenda);
+      _liquidoCtrl.text =
+          p.liquidoInformado == null ? '' : _texto(p.liquidoInformado!);
       _autoPreco = false;
       _autoEnvio = false;
       for (final item in p.itens) {
@@ -103,334 +210,508 @@ class _PedidoEditorState extends ConsumerState<PedidoEditor> {
             ehKit: item.tipo == TipoPedidoItem.produtoVenda,
             refId: item.produtoVendaId ?? item.produtoId ?? '',
             quantidade: item.quantidade,
+            original: item,
           ),
         );
       }
     }
+    _embalagemCtrl.text = _texto(_embalagem);
+    _impressaoCtrl.text = _texto(_impressao);
+    _outrosCtrl.text = _texto(_outros);
   }
 
   @override
   void dispose() {
-    _clienteCtrl.dispose();
-    _obsCtrl.dispose();
-    _precoCtrl.dispose();
-    _liquidoCtrl.dispose();
-    _itensTaxaCtrl.dispose();
-    _buscaCtrl.dispose();
+    for (final c in [
+      _clienteCtrl,
+      _obsCtrl,
+      _precoCtrl,
+      _liquidoCtrl,
+      _itensTaxaCtrl,
+      _embalagemCtrl,
+      _impressaoCtrl,
+      _outrosCtrl,
+      _buscaCtrl,
+    ]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
+  String _texto(Decimal v) =>
+      v == Decimal.zero ? '' : Formatos.numero(v.toDouble());
+
+  // ------------------------------------------------------------------ build
+
   @override
   Widget build(BuildContext context) {
-    final dadosAsync = ref.watch(dadosEdicaoPedidoProvider);
-    final larguraTela = MediaQuery.sizeOf(context).width;
-    final telaCheia = larguraTela < 760;
-
-    return Dialog(
-      insetPadding: EdgeInsets.zero,
-      alignment: telaCheia ? Alignment.center : Alignment.centerRight,
-      shape: const RoundedRectangleBorder(),
-      child: SizedBox(
-        width: telaCheia ? larguraTela : 1080.0.clamp(0, larguraTela),
-        height: MediaQuery.sizeOf(context).height,
-        child: dadosAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => _ErroCarregar(
-            onTentar: () => ref.invalidate(dadosEdicaoPedidoProvider),
-          ),
-          data: (dados) {
-            if (dados.plataformas.isEmpty) {
-              return _SemPlataformas(
-                onFechar: () => Navigator.of(context).pop(false),
-              );
-            }
-            _plataformaId ??= dados.plataformas.keys.isEmpty
-                ? null
-                : dados.plataformas.keys.first.id;
-            if (widget.pedido == null) {
-              _embalagem = dados.configuracoes?.embalagemPadrao ??
-                  Decimal.zero;
-              _impressao = dados.configuracoes?.impressaoPadrao ??
-                  Decimal.zero;
-            }
-            return _corpo(dados);
-          },
-        ),
+    return _Casca(
+      titulo: widget.inicial == null ? 'Novo pedido' : 'Pedido',
+      aoFechar: () => Navigator.of(context).pop(false),
+      aoSalvar: _salvando ? null : _salvar,
+      salvando: _salvando,
+      corpo: LayoutBuilder(
+        builder: (context, c) {
+          final largo = c.maxWidth >= _limiarDuasColunas;
+          final pad =
+              largo ? Espacos.paddingPainel : Espacos.paddingPainelCelular;
+          if (!largo) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(pad),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _cabecalho(),
+                  const SizedBox(height: Espacos.g16),
+                  _colunaEsquerda(),
+                  const SizedBox(height: Espacos.g16),
+                  _resumo(),
+                ],
+              ),
+            );
+          }
+          return Padding(
+            padding: EdgeInsets.all(pad),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _cabecalho(),
+                const SizedBox(height: Espacos.g16),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 115,
+                        child: SingleChildScrollView(child: _colunaEsquerda()),
+                      ),
+                      const SizedBox(width: Espacos.g16),
+                      // Coluna do resumo rola à parte: fica sempre visível.
+                      Expanded(
+                        flex: 100,
+                        child: SingleChildScrollView(child: _resumo()),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _corpo(DadosEdicaoPedido dados) {
-    final cores = context.cores;
-    final textos = Theme.of(context).textTheme;
-
-    return Column(
-      children: [
-        // Cabeçalho fixo.
-        Container(
-          padding: const EdgeInsets.all(Espacos.g16),
-          decoration: BoxDecoration(
-            color: cores.surface,
-            border: Border(bottom: BorderSide(color: cores.line)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.pedido == null ? 'Novo pedido' : 'Pedido',
-                  style: textos.titleMedium,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(LucideIcons.x),
-                onPressed: () => Navigator.of(context).pop(false),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(Espacos.paddingPainel),
-            child: LayoutBuilder(
-              builder: (context, c) {
-                final largo = c.maxWidth >= 860;
-                final esquerda = _colunaEsquerda(dados);
-                final direita = _resumo(dados);
-                if (!largo) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      esquerda,
-                      const SizedBox(height: Espacos.g16),
-                      direita,
-                    ],
-                  );
-                }
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 3, child: esquerda),
-                    const SizedBox(width: Espacos.g16),
-                    Expanded(flex: 2, child: direita),
-                  ],
-                );
-              },
+  Widget _cabecalho() {
+    final plataformas = _dados.plataformas.keys.toList();
+    return _Grade(
+      filhos: [
+        _Campo(
+          rotulo: 'Data',
+          filho: InkWell(
+            borderRadius: BorderRadius.circular(Raios.controle),
+            onTap: () async {
+              final d = await showDatePicker(
+                context: context,
+                initialDate: _data,
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2100),
+              );
+              if (d != null) setState(() => _data = d);
+            },
+            child: InputDecorator(
+              decoration: const InputDecoration(),
+              child: Text(Formatos.data(_data)),
             ),
           ),
         ),
-        // Rodapé fixo.
-        Container(
-          padding: const EdgeInsets.all(Espacos.g16),
-          decoration: BoxDecoration(
-            color: cores.surface,
-            border: Border(top: BorderSide(color: cores.line)),
+        _Campo(
+          rotulo: 'Cliente / nº do pedido',
+          filho: TextField(
+            controller: _clienteCtrl,
+            textCapitalization: TextCapitalization.characters,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton(
-                onPressed: _salvando
-                    ? null
-                    : () => Navigator.of(context).pop(false),
-                child: const Text('Cancelar'),
-              ),
-              const SizedBox(width: Espacos.g12),
-              FilledButton(
-                onPressed: _salvando ? null : () => _salvar(dados),
-                child: _salvando
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Salvar pedido'),
-              ),
+        ),
+        _Campo(
+          rotulo: 'Plataforma de venda',
+          filho: DropdownButtonFormField<String>(
+            initialValue: _plataformaId,
+            isExpanded: true,
+            items: [
+              for (final p in plataformas)
+                DropdownMenuItem(value: p.id, child: Text(p.nome)),
             ],
+            onChanged: (v) => setState(() {
+              _plataformaId = v ?? _plataformaId;
+              _recalcularAuto();
+            }),
+          ),
+        ),
+        _Campo(
+          rotulo: 'Status',
+          filho: DropdownButtonFormField<SituacaoPedido>(
+            initialValue: _situacao,
+            isExpanded: true,
+            items: [
+              for (final s in SituacaoPedido.values)
+                DropdownMenuItem(value: s, child: Text(rotuloSituacao(s))),
+            ],
+            onChanged: (v) => setState(() => _situacao = v ?? _situacao),
           ),
         ),
       ],
     );
   }
 
-  Widget _colunaEsquerda(DadosEdicaoPedido dados) {
-    final plataformas = dados.plataformas.keys.toList();
+  Widget _colunaEsquerda() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Cabeçalho do pedido.
-        Wrap(
-          spacing: Espacos.g12,
-          runSpacing: Espacos.g12,
-          children: [
-            SizedBox(width: 180, child: _campoData()),
-            SizedBox(
-              width: 240,
-              child: TextField(
-                controller: _clienteCtrl,
-                textCapitalization: TextCapitalization.characters,
-                decoration: const InputDecoration(
-                  labelText: 'Cliente / nº do pedido',
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 220,
-              child: DropdownButtonFormField<String>(
-                initialValue: _plataformaId,
-                isExpanded: true,
-                decoration:
-                    const InputDecoration(labelText: 'Plataforma de venda'),
-                items: [
-                  for (final p in plataformas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) => setState(() {
-                  _plataformaId = v;
-                  _recalcularAuto(dados);
-                }),
-              ),
-            ),
-            SizedBox(
-              width: 180,
-              child: DropdownButtonFormField<SituacaoPedido>(
-                initialValue: _situacao,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Situação'),
-                items: const [
-                  DropdownMenuItem(
-                    value: SituacaoPedido.concluido,
-                    child: Text('Concluído'),
-                  ),
-                  DropdownMenuItem(
-                    value: SituacaoPedido.cancelado,
-                    child: Text('Cancelado'),
-                  ),
-                  DropdownMenuItem(
-                    value: SituacaoPedido.devolvido,
-                    child: Text('Devolvido'),
-                  ),
-                ],
-                onChanged: (v) => setState(
-                  () => _situacao = v ?? SituacaoPedido.concluido,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: Espacos.g20),
-        _painel(
-          'Itens do pedido',
-          _listaItens(dados),
+        PainelCard(
+          titulo: 'Itens do pedido',
+          semPaddingCorpo: true,
+          corpo: _listaItens(),
         ),
         const SizedBox(height: Espacos.g16),
-        _painel(
-          'Adicionar produto ou produto de venda',
-          _picker(dados),
+        PainelCard(
+          titulo: 'Adicionar produto ou produto de venda',
+          corpo: _picker(),
         ),
         const SizedBox(height: Espacos.g16),
-        _painel('Custos do envio', _custosEnvio()),
+        PainelCard(titulo: 'Custos do envio', corpo: _custosEnvio()),
         const SizedBox(height: Espacos.g16),
-        _painel('Venda', _venda()),
+        PainelCard(titulo: 'Venda', corpo: _venda()),
       ],
     );
   }
 
-  Widget _campoData() {
-    return InkWell(
-      onTap: () async {
-        final d = await showDatePicker(
-          context: context,
-          initialDate: _data,
-          firstDate: DateTime(2020),
-          lastDate: DateTime(2100),
-        );
-        if (d != null) setState(() => _data = d);
-      },
-      child: InputDecorator(
-        decoration: const InputDecoration(labelText: 'Data'),
-        child: Text(Formatos.data(_data)),
+  // ------------------------------------------------------------------ itens
+
+  Widget _listaItens() {
+    if (_linhas.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(Espacos.g20),
+        child: Text(
+          'Adicione os itens que o cliente comprou.',
+          style: TextStyle(color: context.cores.muted),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < _linhas.length; i++)
+          _linhaItem(i, ultima: i == _linhas.length - 1),
+      ],
+    );
+  }
+
+  Widget _linhaItem(int i, {required bool ultima}) {
+    final cores = context.cores;
+    final l = _linhas[i];
+    final snap = _snapshot(l);
+    final custo = snap?.custo ?? Decimal.zero;
+    final qtd = Decimal.fromInt(l.quantidade);
+    final nome = _nomeDe(l);
+    final detalhe = _detalheAbelinhas(l, snap);
+
+    final info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _marca(l),
+            const SizedBox(width: Espacos.g8),
+            Flexible(child: Text(nome, overflow: TextOverflow.ellipsis)),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          detalhe,
+          style: TextStyle(fontSize: 12, color: cores.muted),
+        ),
+      ],
+    );
+    final total = SizedBox(
+      width: 76,
+      child: Text(
+        Formatos.moedaDecimal(custo * qtd),
+        textAlign: TextAlign.right,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+    );
+    final remover = Tooltip(
+      message: 'Remover item',
+      child: Semantics(
+        button: true,
+        label: 'Remover item',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(Raios.controle),
+          onTap: () => setState(() {
+            _linhas.removeAt(i);
+            _recalcularAuto();
+          }),
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Icon(LucideIcons.trash2, size: 16, color: cores.muted),
+          ),
+        ),
+      ),
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Espacos.paddingPainel,
+        vertical: 10,
+      ),
+      decoration: BoxDecoration(
+        border: ultima ? null : Border(bottom: BorderSide(color: cores.line)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          if (c.maxWidth < 480) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                info,
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    _controleQtd(i),
+                    const Spacer(),
+                    total,
+                    remover,
+                  ],
+                ),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(child: info),
+              const SizedBox(width: Espacos.g12),
+              Text(
+                Formatos.moedaDecimal(custo),
+                style: TextStyle(color: cores.muted),
+              ),
+              const SizedBox(width: Espacos.g12),
+              _controleQtd(i),
+              const SizedBox(width: Espacos.g12),
+              total,
+              remover,
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _listaItens(DadosEdicaoPedido dados) {
-    if (_linhas.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: Espacos.g12),
-        child: Text('Adicione os itens que o cliente comprou.'),
-      );
+  Widget _marca(_LinhaEdicao l) {
+    if (l.ehKit) return const Pill('kit', tom: TomPill.bom);
+    return CodeChip(_produtoPorId(l.refId)?.codigo ?? '?');
+  }
+
+  String _nomeDe(_LinhaEdicao l) {
+    if (l.ehKit) return _kitPorId(l.refId)?.nome ?? '(kit removido)';
+    return _produtoPorId(l.refId)?.nome ?? '(produto removido)';
+  }
+
+  String _detalheAbelinhas(_LinhaEdicao l, _Snapshot? snap) {
+    final ab = snap?.abelinhas ?? Decimal.zero;
+    final texto = StringBuffer(
+      '${Formatos.abelinhas(ab.toDouble())} cada',
+    );
+    if (l.quantidade > 1) {
+      final total = ab * Decimal.fromInt(l.quantidade);
+      texto.write(' · ${Formatos.abelinhas(total.toDouble())} no total');
     }
+    final kit = l.ehKit ? _kitPorId(l.refId) : null;
+    if (kit != null) {
+      final partes = <String>[];
+      for (final i in kit.itens) {
+        final p = _produtoPorId(i.produtoId);
+        final abItem = p == null
+            ? Decimal.zero
+            : abelinhasProduto(p, _dados.faixasAbelinha) *
+                Decimal.fromInt(i.quantidade);
+        partes.add(
+          '${i.quantidade}× ${p?.codigo ?? '?'} '
+          '(${Formatos.abelinhas(abItem.toDouble())})',
+        );
+      }
+      if (partes.isNotEmpty) texto.write(' · ${partes.join(' + ')}');
+    }
+    return texto.toString();
+  }
+
+  Widget _controleQtd(int i) {
     final cores = context.cores;
-    return Column(
-      children: [
-        for (var i = 0; i < _linhas.length; i++)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: Espacos.g8),
-            child: Row(
-              children: [
-                Expanded(child: _nomeLinha(dados, _linhas[i])),
-                _controleQtd(i, dados),
-              ],
+    Widget botao(String dica, IconData icone, VoidCallback aoTocar) {
+      return Tooltip(
+        message: dica,
+        child: Semantics(
+          button: true,
+          label: dica,
+          child: InkWell(
+            onTap: aoTocar,
+            child: SizedBox(
+              width: 28,
+              height: 28,
+              child: Icon(icone, size: 14, color: cores.muted),
             ),
           ),
-        Divider(color: cores.line),
-      ],
-    );
-  }
-
-  Widget _nomeLinha(DadosEdicaoPedido dados, _LinhaEdicao l) {
-    final textos = Theme.of(context).textTheme;
-    final nome = l.ehKit
-        ? _kitPorId(dados, l.refId)?.nome ?? '?'
-        : _produtoPorId(dados, l.refId)?.nome ?? '?';
-    final prefixo = l.ehKit ? 'kit · ' : '';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(nome, style: textos.bodyMedium),
-        Text('$prefixo${l.quantidade} un', style: textos.bodySmall),
-      ],
-    );
-  }
-
-  Widget _controleQtd(int i, DadosEdicaoPedido dados) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          icon: const Icon(LucideIcons.minus, size: 16),
-          onPressed: () => setState(() {
-            _linhas[i].quantidade--;
-            if (_linhas[i].quantidade <= 0) _linhas.removeAt(i);
-            _recalcularAuto(dados);
-          }),
         ),
-        Text('${i < _linhas.length ? _linhas[i].quantidade : ''}'),
-        IconButton(
-          icon: const Icon(LucideIcons.plus, size: 16),
-          onPressed: () => setState(() {
-            _linhas[i].quantidade++;
-            _recalcularAuto(dados);
-          }),
-        ),
-      ],
+      );
+    }
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: cores.surface,
+        borderRadius: BorderRadius.circular(Raios.controle),
+        border: Border.all(color: cores.line),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          botao('Diminuir', LucideIcons.minus, () => setState(() {
+                _linhas[i].quantidade--;
+                if (_linhas[i].quantidade <= 0) _linhas.removeAt(i);
+                _recalcularAuto();
+              })),
+          SizedBox(
+            width: 26,
+            child: Text(
+              '${_linhas[i].quantidade}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          botao('Aumentar', LucideIcons.plus, () => setState(() {
+                _linhas[i].quantidade++;
+                _recalcularAuto();
+              })),
+        ],
+      ),
     );
   }
 
-  Widget _picker(DadosEdicaoPedido dados) {
+  // ----------------------------------------------------------------- picker
+
+  Widget _picker() {
+    final cores = context.cores;
     final q = _busca.trim().toLowerCase();
-    final produtos = dados.produtos
-        .where((p) =>
-            q.isEmpty ||
-            p.nome.toLowerCase().contains(q) ||
-            p.codigo.toLowerCase().contains(q))
-        .take(8)
+    final produtos = _dados.produtos
+        .where((p) => p.ativo)
+        .where(
+          (p) =>
+              q.isEmpty ||
+              '${p.codigo} ${p.nome} ${p.marca}'.toLowerCase().contains(q),
+        )
+        .take(60)
         .toList();
-    final kits = dados.kits
+    final kits = _dados.kits
         .where((k) => q.isEmpty || k.nome.toLowerCase().contains(q))
-        .take(8)
         .toList();
+
+    Widget linha({
+      required Widget marca,
+      required InlineSpan nome,
+      required Decimal custo,
+      required VoidCallback aoAdicionar,
+      required bool primeira,
+    }) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          border:
+              primeira ? null : Border(top: BorderSide(color: cores.line)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final custoTxt = Text(
+                Formatos.moedaDecimal(custo),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              );
+              final botao = BotaoPequeno(
+                rotulo: 'Adicionar',
+                onPressed: aoAdicionar,
+              );
+              final titulo = Text.rich(nome, overflow: TextOverflow.ellipsis);
+              if (c.maxWidth < 380) {
+                // Estreito: o custo e o botão descem para a linha de baixo.
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        marca,
+                        const SizedBox(width: 10),
+                        Expanded(child: titulo),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [custoTxt, const SizedBox(width: 10), botao],
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  marca,
+                  const SizedBox(width: 10),
+                  Expanded(child: titulo),
+                  const SizedBox(width: 10),
+                  custoTxt,
+                  const SizedBox(width: 10),
+                  botao,
+                ],
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    final itens = <Widget>[];
+    for (final k in kits) {
+      itens.add(
+        linha(
+          marca: const Pill('kit', tom: TomPill.bom),
+          nome: TextSpan(text: k.nome),
+          custo: _calcKit(k).investimento,
+          aoAdicionar: () => _adicionar(ehKit: true, refId: k.id),
+          primeira: itens.isEmpty,
+        ),
+      );
+    }
+    for (final p in produtos) {
+      itens.add(
+        linha(
+          marca: CodeChip(p.codigo),
+          nome: TextSpan(
+            children: [
+              TextSpan(text: p.nome),
+              TextSpan(
+                text: '  ${p.marca}',
+                style: TextStyle(color: cores.muted),
+              ),
+            ],
+          ),
+          custo: p.custo,
+          aoAdicionar: () => _adicionar(ehKit: false, refId: p.id),
+          primeira: itens.isEmpty,
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -444,348 +725,289 @@ class _PedidoEditorState extends ConsumerState<PedidoEditor> {
           ),
           onChanged: (v) => setState(() => _busca = v),
         ),
-        const SizedBox(height: Espacos.g8),
-        for (final k in kits)
-          ListTile(
-            dense: true,
-            leading: const Icon(LucideIcons.package, size: 18),
-            title: Text('${k.nome} (kit)'),
-            trailing: const Icon(LucideIcons.plus, size: 16),
-            onTap: () => _adicionar(dados, ehKit: true, refId: k.id),
-          ),
-        for (final p in produtos)
-          ListTile(
-            dense: true,
-            leading: Text(p.codigo),
-            title: Text(p.nome),
-            trailing: const Icon(LucideIcons.plus, size: 16),
-            onTap: () => _adicionar(dados, ehKit: false, refId: p.id),
-          ),
+        const SizedBox(height: Espacos.g12),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 300),
+          child: itens.isEmpty
+              ? Text('Nada encontrado.', style: TextStyle(color: cores.muted))
+              : SingleChildScrollView(child: Column(children: itens)),
+        ),
       ],
     );
   }
 
+  // ------------------------------------------------------- custos e venda
+
   Widget _custosEnvio() {
-    return Wrap(
-      spacing: Espacos.g12,
-      runSpacing: Espacos.g12,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          width: 180,
-          child: _campoMoeda(
-            r'Embalagem (R$)',
-            _embalagem,
-            (v) => setState(() {
-              _embalagem = v ?? Decimal.zero;
-              _autoEnvio = false;
-            }),
-          ),
+        _Grade(
+          filhos: [
+            _Campo(
+              rotulo: r'Embalagem (R$)',
+              filho: _moeda(_embalagemCtrl, (v) {
+                _embalagem = v ?? Decimal.zero;
+                _autoEnvio = false;
+              }),
+            ),
+            _Campo(
+              rotulo: r'Impressão (R$)',
+              filho: _moeda(_impressaoCtrl, (v) {
+                _impressao = v ?? Decimal.zero;
+                _autoEnvio = false;
+              }),
+            ),
+            _Campo(
+              rotulo: r'Outros (R$)',
+              dica: 'Brinde, fita, frete pago por você',
+              filho: _moeda(_outrosCtrl, (v) {
+                _outros = v ?? Decimal.zero;
+                _autoEnvio = false;
+              }),
+            ),
+          ],
         ),
-        SizedBox(
-          width: 180,
-          child: _campoMoeda(
-            r'Impressão (R$)',
-            _impressao,
-            (v) => setState(() {
-              _impressao = v ?? Decimal.zero;
-              _autoEnvio = false;
-            }),
-          ),
-        ),
-        SizedBox(
-          width: 180,
-          child: _campoMoeda(
-            r'Outros (R$)',
-            _outros,
-            (v) => setState(() => _outros = v ?? Decimal.zero),
-          ),
+        const SizedBox(height: Espacos.g12),
+        Text(
+          'Kits já incluem embalagem e impressão no custo, então aqui fica '
+          'zerado quando o pedido tem só kits.',
+          style: TextStyle(fontSize: 12, color: context.cores.muted),
         ),
       ],
     );
   }
 
   Widget _venda() {
-    return Wrap(
-      spacing: Espacos.g12,
-      runSpacing: Espacos.g12,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          width: 200,
-          child: TextField(
-            controller: _precoCtrl,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: r'Preço de venda (R$)',
+        _Grade(
+          filhos: [
+            _Campo(
+              rotulo: r'Preço de venda (R$)',
+              dica: 'Valor total pago pelo cliente. Com kit, já vem o preço '
+                  'dele na plataforma',
+              filho: _moeda(_precoCtrl, (v) {
+                _precoVenda = v ?? Decimal.zero;
+                _autoPreco = false;
+              }),
             ),
-            onChanged: (v) => setState(() {
-              _precoVenda = Formatos.parseDecimal(v) ?? Decimal.zero;
-              _autoPreco = false;
-            }),
-          ),
+            _Campo(
+              rotulo: 'Itens cobrados com taxa fixa',
+              dica: 'A taxa fixa é cobrada por item/anúncio',
+              filho: TextField(
+                controller: _itensTaxaCtrl,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                onChanged: (v) => setState(() {
+                  _itensTaxaFixa = int.tryParse(v) ?? 1;
+                  _autoPreco = false;
+                }),
+              ),
+            ),
+            _Campo(
+              rotulo: r'Líquido recebido (R$)',
+              dica: 'Valor que a plataforma informou. Em branco usa a '
+                  'estimativa',
+              filho: MoneyField(
+                controller: _liquidoCtrl,
+                prefix: '',
+                onChanged: (v) => setState(() => _liquidoInformado = v),
+              ),
+            ),
+          ],
         ),
-        SizedBox(
-          width: 200,
-          child: TextField(
-            controller: _itensTaxaCtrl,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Itens cobrados com taxa fixa',
-            ),
-            onChanged: (v) => setState(() {
-              _itensTaxaFixa = int.tryParse(v) ?? 1;
-              _autoPreco = false;
-            }),
-          ),
-        ),
-        SizedBox(
-          width: 200,
-          child: TextField(
-            controller: _liquidoCtrl,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: r'Líquido recebido (R$)',
-            ),
-            onChanged: (v) => setState(
-              () => _liquidoInformado = Formatos.parseDecimal(v),
-            ),
-          ),
-        ),
-        SizedBox(
-          width: 420,
-          child: TextField(
-            controller: _obsCtrl,
-            decoration: const InputDecoration(labelText: 'Observação'),
-          ),
+        const SizedBox(height: Espacos.g12),
+        _Campo(
+          rotulo: 'Observação',
+          filho: TextField(controller: _obsCtrl),
         ),
       ],
     );
   }
 
-  Widget _resumo(DadosEdicaoPedido dados) {
-    final cores = context.cores;
-    final textos = Theme.of(context).textTheme;
-    final pedido = _montarPedido(dados);
-    final faixas = _faixasDaPlataforma(dados);
+  Widget _moeda(TextEditingController ctrl, void Function(Decimal?) aoMudar) {
+    return MoneyField(
+      controller: ctrl,
+      prefix: '',
+      onChanged: (v) => setState(() => aoMudar(v)),
+    );
+  }
+
+  // ----------------------------------------------------------------- resumo
+
+  Widget _resumo() {
+    final pedido = _montarPedido();
+    final faixas = _faixasDaPlataforma();
     final r = calcularPedido(pedido, faixas);
-    final v = dados.configuracoes?.valorAbelinha ?? Decimal.zero;
+    final valor = _dados.configuracoes?.valorAbelinha ?? Decimal.zero;
+    final plataforma = _plataformaAtual();
+    final f = faixa(faixas, pedido.precoVenda);
+    final semItens = _linhas.isEmpty;
+    final temKit = _linhas.any((l) => l.ehKit);
 
-    Widget linha(String rotulo, String valor, {bool forte = false}) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                rotulo,
-                style: forte
-                    ? textos.bodyMedium?.copyWith(fontWeight: FontWeight.w600)
-                    : textos.bodySmall,
-              ),
+    final fixo = pedido.itensTaxaFixa > 1
+        ? '${Formatos.moedaDecimal(f.taxaFixa)} × ${pedido.itensTaxaFixa}'
+        : Formatos.moedaDecimal(f.taxaFixa);
+    final rotuloTaxa = 'Taxa estimada ${plataforma.nome} '
+        '(${_pct(f.taxaPercentual)}% + $fixo)';
+
+    final linhasAb = <(String, String)>[
+      if (semItens)
+        ('Nenhum item ainda', '0 🐝')
+      else
+        for (final l in _linhas)
+          (
+            '${_nomeDe(l)}${l.quantidade > 1 ? ' × ${l.quantidade}' : ''}',
+            Formatos.abelinhas(
+              ((_snapshot(l)?.abelinhas ?? Decimal.zero) *
+                      Decimal.fromInt(l.quantidade))
+                  .toDouble(),
             ),
-            Text(
-              valor,
-              style: forte
-                  ? textos.bodyMedium?.copyWith(fontWeight: FontWeight.w600)
-                  : textos.bodyMedium,
-            ),
-          ],
-        ),
-      );
+          ),
+    ];
+
+    final efetivaPct = pedido.precoVenda > Decimal.zero
+        ? Formatos.percentualFracao(
+            (r.taxaEfetiva / pedido.precoVenda).toDouble(),
+          )
+        : '—';
+
+    String? avisoLiquido;
+    if (_liquidoInformado != null) {
+      final dif = (r.liquido - r.liquidoEstimado).abs();
+      if (dif > Decimal.parse('0.5')) {
+        avisoLiquido = 'O líquido informado difere '
+            '${Formatos.moedaDecimal(dif)} da estimativa. Se for '
+            'recorrente, revise as faixas em Plataformas e taxas.';
+      }
     }
 
-    final lucroNegativo = r.lucro < Decimal.zero;
-
-    return Container(
-      padding: const EdgeInsets.all(Espacos.g16),
-      decoration: BoxDecoration(
-        color: cores.surface,
-        borderRadius: BorderRadius.circular(Raios.cartao),
-        border: Border.all(color: cores.line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('Custo do pedido', style: textos.labelLarge),
-          linha('Mercadoria', Formatos.moedaDecimal(r.mercadoria)),
-          linha(
-            'Embalagem + impressão + outros',
-            Formatos.moedaDecimal(_embalagem + _impressao + _outros),
-          ),
-          linha('Custo total', Formatos.moedaDecimal(r.custo), forte: true),
-          const SizedBox(height: Espacos.g12),
-          Text('Abelinhas do pedido', style: textos.labelLarge),
-          linha(
-            'Total de abelinhas',
-            Formatos.abelinhas(r.abelinhasPedido.toDouble()),
-            forte: true,
-          ),
-          linha(
-            'Valem com 1 🐝 = ${Formatos.moedaDecimal(v)}',
-            Formatos.moedaDecimal(r.abelinhasPedido * v),
-          ),
-          const SizedBox(height: Espacos.g12),
-          Text('Venda', style: textos.labelLarge),
-          linha('Preço de venda', Formatos.moedaDecimal(pedido.precoVenda)),
-          linha(
-            'Taxa estimada',
-            Formatos.moedaDecimal(r.taxaEstimada),
-          ),
-          linha(
-            'Líquido estimado',
-            Formatos.moedaDecimal(r.liquidoEstimado),
-          ),
-          linha(
-            'Líquido considerado',
-            '${Formatos.moedaDecimal(r.liquido)} '
-                '${_liquidoInformado != null ? '(informado)' : '(estimado)'}',
-          ),
-          linha('Taxa efetiva', Formatos.moedaDecimal(r.taxaEfetiva)),
-          const Divider(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Lucro do pedido', style: textos.titleMedium),
-              Text(
-                Formatos.moedaDecimal(r.lucro),
-                style: textos.titleMedium?.copyWith(
-                  color: lucroNegativo ? cores.bad : cores.good,
-                ),
-              ),
-            ],
-          ),
-          Text(
-            'Margem sobre a venda: '
-            '${Formatos.percentualFracao(r.margem.toDouble())}',
-            style: textos.bodySmall,
-          ),
-          if (_avisoLiquido(r) != null) ...[
-            const SizedBox(height: Espacos.g12),
-            Container(
-              padding: const EdgeInsets.all(Espacos.g12),
-              decoration: BoxDecoration(
-                color: cores.warnSoft,
-                borderRadius: BorderRadius.circular(Raios.controle),
-              ),
-              child: Text(
-                _avisoLiquido(r)!,
-                style: textos.bodySmall?.copyWith(color: cores.warn),
-              ),
-            ),
-          ],
-        ],
-      ),
+    return PedidoResumo(
+      mercadoria: Formatos.moedaDecimal(r.mercadoria),
+      extras: Formatos.moedaDecimal(_embalagem + _impressao + _outros),
+      custoTotal: Formatos.moedaDecimal(r.custo),
+      linhasAbelinhas: linhasAb,
+      totalAbelinhas: Formatos.abelinhas(r.abelinhasPedido.toDouble()),
+      rotuloValorAbelinha: 'Valem com 1 🐝 = ${Formatos.moedaDecimal(valor)}',
+      valorAbelinhas: Formatos.moedaDecimal(r.abelinhasPedido * valor),
+      precoVenda: Formatos.moedaDecimal(pedido.precoVenda),
+      rotuloTaxa: rotuloTaxa,
+      taxaEstimada: Formatos.moedaDecimal(r.taxaEstimada),
+      liquidoEstimado: Formatos.moedaDecimal(r.liquidoEstimado),
+      liquidoConsiderado: Formatos.moedaDecimal(r.liquido),
+      liquidoInformado: _liquidoInformado != null,
+      taxaEfetiva: '${Formatos.moedaDecimal(r.taxaEfetiva)} · $efetivaPct',
+      lucro: Formatos.moedaDecimal(r.lucro),
+      lucroNegativo: r.lucro < Decimal.zero,
+      margem: pedido.precoVenda > Decimal.zero
+          ? Formatos.percentualFracao(r.margem.toDouble())
+          : '—',
+      avisoPreco: _autoPreco && temKit
+          ? 'Preço preenchido com o valor do kit na ${plataforma.nome}. '
+              'Troque a plataforma e ele recalcula; digite outro preço se '
+              'a venda foi diferente.'
+          : null,
+      avisoLiquido: avisoLiquido,
     );
   }
 
-  String? _avisoLiquido(ResultadoPedido r) {
-    if (_liquidoInformado == null) return null;
-    final dif = (r.liquido - r.liquidoEstimado).abs();
-    if (dif > Decimal.parse('0.5')) {
-      return 'O líquido informado difere ${Formatos.moedaDecimal(dif)} da '
-          'estimativa. Se for recorrente, revise as faixas em '
-          'Plataformas e taxas.';
-    }
-    return null;
+  String _pct(Decimal d) {
+    final v = d.toDouble();
+    return v == v.roundToDouble()
+        ? v.toStringAsFixed(0)
+        : Formatos.numero(v);
   }
 
-  Widget _painel(String titulo, Widget corpo) {
-    final cores = context.cores;
-    final textos = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(Espacos.g16),
-      decoration: BoxDecoration(
-        color: cores.surface,
-        borderRadius: BorderRadius.circular(Raios.cartao),
-        border: Border.all(color: cores.line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(titulo, style: textos.titleMedium),
-          const SizedBox(height: Espacos.g8),
-          corpo,
-        ],
-      ),
-    );
-  }
+  // ----------------------------------------------------------------- lógica
 
-  Widget _campoMoeda(
-    String label,
-    Decimal valor,
-    ValueChanged<Decimal?> onChanged,
-  ) {
-    return TextFormField(
-      initialValue: valor == Decimal.zero
-          ? ''
-          : Formatos.numero(valor.toDouble()),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: InputDecoration(labelText: label),
-      onChanged: (v) => onChanged(Formatos.parseDecimal(v)),
-    );
-  }
-
-  // ---- lógica ----
-
-  Produto? _produtoPorId(DadosEdicaoPedido dados, String id) {
-    for (final p in dados.produtos) {
+  Produto? _produtoPorId(String id) {
+    for (final p in _dados.produtos) {
       if (p.id == id) return p;
     }
     return null;
   }
 
-  ProdutoVenda? _kitPorId(DadosEdicaoPedido dados, String id) {
-    for (final k in dados.kits) {
+  ProdutoVenda? _kitPorId(String id) {
+    for (final k in _dados.kits) {
       if (k.id == id) return k;
     }
     return null;
   }
 
-  Plataforma? _plataformaAtual(DadosEdicaoPedido dados) {
-    for (final p in dados.plataformas.keys) {
+  Plataforma _plataformaAtual() {
+    for (final p in _dados.plataformas.keys) {
       if (p.id == _plataformaId) return p;
     }
-    return dados.plataformas.keys.isEmpty
-        ? null
-        : dados.plataformas.keys.first;
+    return _dados.plataformas.keys.first;
   }
 
-  List<FaixaTaxa> _faixasDaPlataforma(DadosEdicaoPedido dados) {
-    for (final e in dados.plataformas.entries) {
+  List<FaixaTaxa> _faixasDaPlataforma() {
+    for (final e in _dados.plataformas.entries) {
       if (e.key.id == _plataformaId) return e.value;
     }
     return const [];
   }
 
-  Map<String, Produto> _produtosPorId(DadosEdicaoPedido dados) => {
-        for (final p in dados.produtos) p.id: p,
+  Map<String, Produto> get _produtosPorId => {
+        for (final p in _dados.produtos) p.id: p,
       };
 
-  void _adicionar(
-    DadosEdicaoPedido dados, {
-    required bool ehKit,
-    required String refId,
-  }) {
+  ResultadoKit _calcKit(ProdutoVenda k) {
+    return _kitCalc[k.id] ??= calcularKit(
+      k,
+      _produtosPorId,
+      _plataformaAtual(),
+      _faixasDaPlataforma(),
+      _dados.faixasAbelinha,
+    );
+  }
+
+  /// Custo/abelinhas unitários da linha: o snapshot gravado, se existir;
+  /// senão calculado do cadastro atual. `null` se não der para obter.
+  _Snapshot? _snapshot(_LinhaEdicao l) {
+    final o = l.original;
+    if (o != null) {
+      return (custo: o.custoUnitario, abelinhas: o.abelinhasUnitarias);
+    }
+    if (l.ehKit) {
+      final k = _kitPorId(l.refId);
+      if (k == null) return null;
+      final r = _calcKit(k);
+      return (custo: r.investimento, abelinhas: r.abelinhasKit);
+    }
+    final p = _produtoPorId(l.refId);
+    if (p == null) return null;
+    return (
+      custo: p.custo,
+      abelinhas: abelinhasProduto(p, _dados.faixasAbelinha),
+    );
+  }
+
+  void _adicionar({required bool ehKit, required String refId}) {
     setState(() {
-      final existente = _linhas.firstWhere(
+      final existente = _linhas.where(
         (l) => l.ehKit == ehKit && l.refId == refId,
-        orElse: () => _LinhaEdicao(ehKit: ehKit, refId: refId, quantidade: 0),
       );
-      if (existente.quantidade == 0) {
-        existente.quantidade = 1;
-        _linhas.add(existente);
+      if (existente.isEmpty) {
+        _linhas.add(
+          _LinhaEdicao(ehKit: ehKit, refId: refId, quantidade: 1),
+        );
       } else {
-        existente.quantidade++;
+        existente.first.quantidade++;
       }
-      _recalcularAuto(dados);
+      _recalcularAuto();
     });
+  }
+
+  void _definirMoeda(TextEditingController ctrl, Decimal v) {
+    ctrl.text = _texto(v);
   }
 
   /// Recalcula preço/itens cobrados e custos de envio conforme as regras
   /// automáticas (design §6.4), só enquanto o usuário não editou à mão.
-  void _recalcularAuto(DadosEdicaoPedido dados) {
+  void _recalcularAuto() {
     final soKits = _linhas.isNotEmpty && _linhas.every((l) => l.ehKit);
     final temProdutoAvulso = _linhas.any((l) => !l.ehKit);
 
@@ -794,73 +1016,53 @@ class _PedidoEditorState extends ConsumerState<PedidoEditor> {
         _embalagem = Decimal.zero;
         _impressao = Decimal.zero;
       } else if (temProdutoAvulso) {
-        _embalagem = dados.configuracoes?.embalagemPadrao ?? Decimal.zero;
-        _impressao = dados.configuracoes?.impressaoPadrao ?? Decimal.zero;
+        _embalagem = _dados.configuracoes?.embalagemPadrao ?? Decimal.zero;
+        _impressao = _dados.configuracoes?.impressaoPadrao ?? Decimal.zero;
       }
+      _definirMoeda(_embalagemCtrl, _embalagem);
+      _definirMoeda(_impressaoCtrl, _impressao);
     }
 
     if (_autoPreco) {
-      final plataforma = _plataformaAtual(dados);
       final kitsComQtd = <ProdutoVenda, int>{};
       for (final l in _linhas.where((l) => l.ehKit)) {
-        final k = _kitPorId(dados, l.refId);
+        final k = _kitPorId(l.refId);
         if (k != null) kitsComQtd[k] = l.quantidade;
       }
-      if (plataforma != null && kitsComQtd.isNotEmpty) {
+      if (kitsComQtd.isNotEmpty) {
         _precoVenda = precoAutomatico(
           kitsComQtd,
-          _produtosPorId(dados),
-          plataforma,
-          _faixasDaPlataforma(dados),
-          dados.faixasAbelinha,
+          _produtosPorId,
+          _plataformaAtual(),
+          _faixasDaPlataforma(),
+          _dados.faixasAbelinha,
         );
         _itensTaxaFixa = itensTaxaFixaAutomatico(kitsComQtd);
-        _precoCtrl.text = Formatos.numero(_precoVenda.toDouble());
+        _definirMoeda(_precoCtrl, _precoVenda);
         _itensTaxaCtrl.text = '$_itensTaxaFixa';
       }
     }
   }
 
-  /// Monta um [Pedido] em memória com os snapshots calculados, para cálculo
-  /// e para salvar.
-  Pedido _montarPedido(DadosEdicaoPedido dados) {
-    final plataforma = _plataformaAtual(dados);
-    final faixas = _faixasDaPlataforma(dados);
-    final produtosPorId = _produtosPorId(dados);
+  /// Monta um [Pedido] em memória com os snapshots, para cálculo e para
+  /// salvar. Linhas sem snapshot obtível são mantidas pelo original.
+  Pedido _montarPedido() {
     final itens = <PedidoItem>[];
-
     for (final l in _linhas) {
-      Decimal custo;
-      Decimal abelinhas;
-      if (l.ehKit) {
-        final k = _kitPorId(dados, l.refId);
-        if (k == null || plataforma == null) continue;
-        final r = calcularKit(
-          k,
-          produtosPorId,
-          plataforma,
-          faixas,
-          dados.faixasAbelinha,
-        );
-        custo = r.investimento;
-        abelinhas = r.abelinhasKit;
-      } else {
-        final p = _produtoPorId(dados, l.refId);
-        if (p == null) continue;
-        custo = p.custo;
-        abelinhas = abelinhasProduto(p, dados.faixasAbelinha);
-      }
+      final snap = _snapshot(l);
+      if (snap == null) continue;
+      final base = l.original;
       itens.add(
         PedidoItem(
-          id: '',
-          empresaId: '',
-          pedidoId: widget.pedido?.id ?? '',
+          id: base?.id ?? '',
+          empresaId: base?.empresaId ?? widget.inicial?.empresaId ?? '',
+          pedidoId: widget.inicial?.id ?? '',
           tipo: l.ehKit
               ? TipoPedidoItem.produtoVenda
               : TipoPedidoItem.produto,
           quantidade: l.quantidade,
-          custoUnitario: custo,
-          abelinhasUnitarias: abelinhas,
+          custoUnitario: snap.custo,
+          abelinhasUnitarias: snap.abelinhas,
           produtoId: l.ehKit ? null : l.refId,
           produtoVendaId: l.ehKit ? l.refId : null,
         ),
@@ -868,11 +1070,11 @@ class _PedidoEditorState extends ConsumerState<PedidoEditor> {
     }
 
     return Pedido(
-      id: widget.pedido?.id ?? '',
-      empresaId: widget.pedido?.empresaId ?? '',
+      id: widget.inicial?.id ?? '',
+      empresaId: widget.inicial?.empresaId ?? '',
       data: _data,
       cliente: _clienteCtrl.text,
-      plataformaId: _plataformaId ?? '',
+      plataformaId: _plataformaId,
       embalagem: _embalagem,
       impressao: _impressao,
       outros: _outros,
@@ -885,7 +1087,7 @@ class _PedidoEditorState extends ConsumerState<PedidoEditor> {
     );
   }
 
-  Future<void> _salvar(DadosEdicaoPedido dados) async {
+  Future<void> _salvar() async {
     final cliente = _clienteCtrl.text.trim();
     if (cliente.isEmpty) {
       _toast('Informe o cliente ou nº do pedido');
@@ -903,13 +1105,11 @@ class _PedidoEditorState extends ConsumerState<PedidoEditor> {
 
     setState(() => _salvando = true);
     try {
-      final base = _montarPedido(dados);
+      final base = _montarPedido();
       final pedido = base.copyWith(
         empresaId: empresa.id,
         cliente: PadraoEscrita.maius(cliente),
-        obs: _obsCtrl.text.isEmpty
-            ? ''
-            : PadraoEscrita.frase(_obsCtrl.text),
+        obs: _obsCtrl.text.isEmpty ? '' : PadraoEscrita.frase(_obsCtrl.text),
         itens: [
           for (final i in base.itens) i.copyWith(empresaId: empresa.id),
         ],
@@ -929,10 +1129,107 @@ class _PedidoEditorState extends ConsumerState<PedidoEditor> {
   }
 }
 
-class _SemPlataformas extends StatelessWidget {
-  const _SemPlataformas({required this.onFechar});
+/// Casca do editor: título + "Fechar", corpo e rodapé Cancelar/Salvar.
+class _Casca extends StatelessWidget {
+  const _Casca({
+    required this.titulo,
+    required this.corpo,
+    required this.aoFechar,
+    this.aoSalvar,
+    this.salvando = false,
+  });
 
-  final VoidCallback onFechar;
+  final String titulo;
+  final Widget corpo;
+  final VoidCallback aoFechar;
+
+  /// `null` desabilita o botão (carregando ou salvando).
+  final VoidCallback? aoSalvar;
+  final bool salvando;
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.cores;
+    final larguraTela = MediaQuery.sizeOf(context).width;
+    final telaCheia = larguraTela < _limiarTelaCheia;
+
+    return Dialog(
+      insetPadding: EdgeInsets.zero,
+      alignment: telaCheia ? Alignment.center : Alignment.centerRight,
+      shape: const RoundedRectangleBorder(),
+      backgroundColor: cores.surface,
+      child: SizedBox(
+        width: telaCheia ? larguraTela : 1080.0.clamp(0, larguraTela),
+        height: MediaQuery.sizeOf(context).height,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Espacos.g20,
+                Espacos.g12,
+                Espacos.g12,
+                Espacos.g12,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      titulo,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: salvando ? null : aoFechar,
+                    child: const Text('Fechar'),
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: cores.line),
+            Expanded(child: corpo),
+            Divider(height: 1, color: cores.line),
+            Padding(
+              padding: const EdgeInsets.all(Espacos.g16),
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: Espacos.g12,
+                runSpacing: Espacos.g8,
+                children: [
+                  OutlinedButton(
+                    onPressed: salvando ? null : aoFechar,
+                    child: const Text('Cancelar'),
+                  ),
+                  FilledButton(
+                    onPressed: aoSalvar,
+                    child: salvando
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Salvar pedido'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Mensagem centralizada com ação opcional (erro, vazio).
+class _Mensagem extends StatelessWidget {
+  const _Mensagem({required this.texto, this.acao, this.aoAcionar});
+
+  final String texto;
+  final String? acao;
+  final VoidCallback? aoAcionar;
 
   @override
   Widget build(BuildContext context) {
@@ -942,13 +1239,11 @@ class _SemPlataformas extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Cadastre ao menos uma plataforma em "Plataformas e taxas" '
-              'antes de lançar um pedido.',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: Espacos.g12),
-            OutlinedButton(onPressed: onFechar, child: const Text('Fechar')),
+            Text(texto, textAlign: TextAlign.center),
+            if (acao != null) ...[
+              const SizedBox(height: Espacos.g12),
+              OutlinedButton(onPressed: aoAcionar, child: Text(acao!)),
+            ],
           ],
         ),
       ),
@@ -956,25 +1251,66 @@ class _SemPlataformas extends StatelessWidget {
   }
 }
 
-class _ErroCarregar extends StatelessWidget {
-  const _ErroCarregar({required this.onTentar});
+/// Campo do protótipo (`label.f`): rótulo 12,5/500 muted acima do input e
+/// dica 12 muted abaixo.
+class _Campo extends StatelessWidget {
+  const _Campo({required this.rotulo, required this.filho, this.dica});
 
-  final VoidCallback onTentar;
+  final String rotulo;
+  final Widget filho;
+  final String? dica;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Não foi possível carregar os dados do pedido.'),
-          const SizedBox(height: Espacos.g12),
-          OutlinedButton(
-            onPressed: onTentar,
-            child: const Text('Tentar de novo'),
+    final muted = context.cores.muted;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          rotulo,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w500,
+            color: muted,
           ),
+        ),
+        const SizedBox(height: 6),
+        filho,
+        if (dica != null) ...[
+          const SizedBox(height: 6),
+          Text(dica!, style: TextStyle(fontSize: 12, color: muted)),
         ],
-      ),
+      ],
+    );
+  }
+}
+
+/// Grade `auto-fit minmax(180px, 1fr)` do protótipo, com até 4 colunas.
+class _Grade extends StatelessWidget {
+  const _Grade({required this.filhos});
+
+  final List<Widget> filhos;
+
+  static const double _minimo = 180;
+  static const double _gap = 14;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, c) {
+        final colunas = ((c.maxWidth + _gap) / (_minimo + _gap))
+            .floor()
+            .clamp(1, filhos.length);
+        final largura = (c.maxWidth - _gap * (colunas - 1)) / colunas;
+        return Wrap(
+          spacing: _gap,
+          runSpacing: _gap,
+          children: [
+            for (final f in filhos) SizedBox(width: largura, child: f),
+          ],
+        );
+      },
     );
   }
 }

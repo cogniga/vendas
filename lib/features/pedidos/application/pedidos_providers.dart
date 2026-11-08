@@ -21,6 +21,15 @@ final pedidosProvider = FutureProvider<List<Pedido>>((ref) async {
   return ref.watch(pedidoRepositoryProvider).listar(empresa.id);
 });
 
+/// Pedido `id` completo (com itens) para o editor, ou `null` se não existir.
+///
+/// O editor usa este provider em vez do pedido da lista, para nunca regravar
+/// um pedido cujos itens não foram carregados.
+final pedidoCompletoProvider =
+    FutureProvider.autoDispose.family<Pedido?, String>((ref, id) {
+  return ref.watch(pedidoRepositoryProvider).obterComItens(id);
+});
+
 /// Plataformas da empresa ativa com suas faixas de taxa.
 final plataformasComFaixasProvider =
     FutureProvider<Map<Plataforma, List<FaixaTaxa>>>((ref) async {

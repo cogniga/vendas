@@ -16,6 +16,8 @@ import 'package:sales/domain/entidades/enums.dart';
 import 'package:sales/domain/entidades/faixa_taxa.dart';
 import 'package:sales/domain/entidades/pedido.dart';
 import 'package:sales/domain/entidades/plataforma.dart';
+import 'package:sales/features/composicao/application/composicao_providers.dart'
+    as composicao;
 import 'package:sales/features/pedidos/application/pedidos_providers.dart';
 import 'package:sales/features/pedidos/presentation/pedido_editor.dart';
 
@@ -37,14 +39,23 @@ class _PedidosPageState extends ConsumerState<PedidosPage> {
       builder: (_) => PedidoEditor(pedido: pedido),
     );
     if ((salvou ?? false) && mounted) {
-      ref.invalidate(pedidosProvider);
+      _atualizar(pedido?.id);
     }
+  }
+
+  /// Invalida tudo que depende dos pedidos (lista, composição, painel/caixa
+  /// derivados e o pedido completo do editor).
+  void _atualizar(String? id) {
+    ref
+      ..invalidate(pedidosProvider)
+      ..invalidate(composicao.pedidosProvider);
+    if (id != null) ref.invalidate(pedidoCompletoProvider(id));
   }
 
   Future<void> _excluir(Pedido pedido) async {
     try {
       await ref.read(pedidoRepositoryProvider).excluir(pedido.id);
-      if (mounted) ref.invalidate(pedidosProvider);
+      if (mounted) _atualizar(pedido.id);
     } on Object {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

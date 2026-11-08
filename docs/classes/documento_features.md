@@ -166,3 +166,31 @@
   usam o produto antes de excluir). O editor é aberto por `abrirProdutoForm`
   (painel lateral). Widgets internos: `_Filtros`, `_CelulaProduto`,
   `_CelulaCusto`, `_CelulaAbelinhas`, `_CelulaEstoque`.
+
+## documento_PedidoEditor
+- **Arquivo:** `lib/features/pedidos/presentation/pedido_editor.dart`
+- **Responsabilidade:** editor de pedido em painel largo, igual ao protótipo
+  (`openPed`). `PedidoEditor(pedido:)` é só o portão de carregamento: ao editar
+  observa `pedidoCompletoProvider(id)` e `dadosEdicaoPedidoProvider`; enquanto
+  carrega mostra indicador com Salvar desabilitado; erro → "Tentar de novo".
+  O formulário privado `_PedidoForm` é montado uma única vez com o pedido
+  completo, então nunca grava a lista de itens de um pedido não carregado.
+- **Layout:** título ("Novo pedido" / "Pedido") + texto "Fechar"; linha de 4
+  campos (Data, Cliente / nº do pedido, Plataforma de venda, Status) com rótulo
+  acima do input; painéis Itens do pedido, Adicionar produto ou produto de
+  venda (busca, pill `kit`/`CodeChip`, custo, "Adicionar"), Custos do envio e
+  Venda; resumo à direita (`PedidoResumo`) em coluna que rola à parte (≥ 860 px)
+  ou empilhado abaixo (< 860 px). Rodapé Cancelar / Salvar pedido.
+- **Itens:** cada linha guarda o `PedidoItem` original; o snapshot de custo e
+  abelinhas é preservado ao salvar. Itens novos usam o cadastro atual.
+  Quantidade 0 ou o botão "Remover item" tiram a linha.
+- **Status:** `rotuloSituacao` (D10): Pago / Devolvido / Cancelado.
+- **Cálculo:** sempre `calcularPedido` (domínio); preço e envio automáticos
+  como em `_recalcularAuto` (design §6.4).
+
+## documento_PedidoResumo
+- **Arquivo:** `lib/features/pedidos/presentation/pedido_resumo.dart`
+- **Responsabilidade:** coluna direita do editor: Custo do pedido (caixa cinza
+  "Custo total"), Abelinhas do pedido, Venda (pill `estimado`/`informado`),
+  caixa "Lucro do pedido" (vermelho se negativo), margem e avisos. Só apresenta
+  strings já formatadas; não calcula.
